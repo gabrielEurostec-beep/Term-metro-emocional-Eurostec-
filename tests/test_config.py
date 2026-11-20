@@ -26,10 +26,27 @@ class TestConfig(unittest.TestCase):
         self.assertEqual([e["nome"] for e in PADRAO["emocoes"] if e["acolhimento"]], ["Triste", "Bravo", "Furioso"])
         ligados = {m: PADRAO["momentos"][m]["perguntar_motivo"] for m in PADRAO["momentos"]}
         self.assertEqual(ligados, {"chegada": True, "saida_almoco": False, "volta_almoco": False, "saida_final": True})
-        self.assertEqual(PADRAO["tempos"]["inatividade_s"], 6)
+        self.assertEqual(PADRAO["tempos"]["inatividade_s"], 3)
         self.assertEqual(PADRAO["tempos"]["agradecimento_s"], 1.5)
         self.assertEqual(PADRAO["tempos"]["bloqueio_novo_registro_s"], 2)
         self.assertEqual((PADRAO["clima"]["latitude"], PADRAO["clima"]["longitude"]), (-29.168, -51.179))
+
+    def test_arquivos_oficiais_da_marca(self):
+        """Design system Eurostec: logos oficiais, fundo azul oficial e Google Sans (4 pesos)."""
+        for chave in ("logo", "logo_branco", "fundo_azul"):
+            self.assertTrue((RAIZ / PADRAO[chave]).is_file(), PADRAO[chave])
+        for peso in ("Regular", "Medium", "SemiBold", "Bold"):
+            self.assertTrue((RAIZ / "quiosque" / "web" / "fontes" / f"GoogleSans-{peso}.woff2").is_file(), peso)
+        css = (RAIZ / "quiosque" / "web" / "estilo.css").read_text(encoding="utf-8")
+        self.assertNotIn("gradient(", css, "fundo azul deve ser a imagem oficial, não degradê em CSS")
+        import re
+        pesos = {int(p) for p in re.findall(r"font-weight:\s*(\d+)", css)}
+        self.assertLessEqual(pesos, {400, 500, 600, 700}, "só pesos com arquivo real (sem negrito sintetizado)")
+
+    def test_textos_da_pergunta_do_dia_sem_marcacao(self):
+        """O texto da pergunta do dia vai para o CSV: não pode ter a marcação de negrito."""
+        for pergunta in PADRAO["pergunta_do_dia"]["perguntas"]:
+            self.assertNotIn("*", pergunta["texto"])
 
     def test_erros_explicados(self):
         casos = [

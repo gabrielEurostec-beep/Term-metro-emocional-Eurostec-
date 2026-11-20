@@ -49,8 +49,16 @@ TIPOS = {
     ".gif": "image/gif",
     ".ico": "image/x-icon",
     ".woff2": "font/woff2",
+    ".woff": "font/woff",
 }
 EXTENSOES_LOGO = {".png", ".jpg", ".jpeg", ".svg", ".webp", ".gif"}
+# Arquivos oficiais da marca (design system Eurostec), configuráveis no config.json.
+ROTAS_MARCA = {
+    "/logo": "logo",
+    "/marca/logo-azul": "logo",
+    "/marca/logo-branco": "logo_branco",
+    "/marca/fundo-azul": "fundo_azul",
+}
 TAMANHO_MAXIMO_PEDIDO = 256 * 1024
 VALIDADE_SESSAO_ADMIN_S = 30 * 60
 
@@ -317,11 +325,11 @@ def criar_manipulador(app: Aplicacao, pasta_web: Path):
                     if self._admin_ok():
                         self._json(200, {"ok": True, "config": app.config, "padrao": cfg.PADRAO})
                     return
-                if caminho == "/logo":
-                    logo = (app.base / app.config["logo"]).resolve()
-                    if logo.suffix.lower() not in EXTENSOES_LOGO:
-                        return self._erro(404, "Logo deve ser uma imagem.")
-                    return self._arquivo(logo, checar_pasta=False)
+                if caminho in ROTAS_MARCA:
+                    imagem = (app.base / app.config[ROTAS_MARCA[caminho]]).resolve()
+                    if imagem.suffix.lower() not in EXTENSOES_LOGO:
+                        return self._erro(404, "O arquivo da marca deve ser uma imagem.")
+                    return self._arquivo(imagem, checar_pasta=False)
                 if caminho in ("/", "/index.html"):
                     caminho = "/index.html"
                 return self._arquivo((pasta_web / caminho.lstrip("/")).resolve())

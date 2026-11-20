@@ -66,7 +66,7 @@ COMPUTADOR DA CIPA
 O início faz parte da janela e o fim não. Por exemplo, 12:20 já conta como "Volta do almoço". Na tela de emoções, há sempre um botão pequeno **"trocar momento"**.
 
 **Tempos:**
-- Após **6 s** sem toque em qualquer tela, o quiosque volta ao início. Uma barrinha azul na parte de baixo mostra esse tempo.
+- Após **3 s** sem toque em qualquer tela, o quiosque volta ao início. Uma barrinha azul na parte de baixo mostra esse tempo; cada toque recomeça a contagem. O tempo é ajustável em `tempos.inatividade_s`.
 - O agradecimento fica **1,5 s** na tela, ou **4 s** quando há a mensagem acolhedora.
 - Proteção contra toque duplo: um novo registro só começa **2 s** depois do último, e ao trocar de tela há uma trava de 0,5 s.
 
@@ -104,7 +104,7 @@ O início faz parte da janela e o fim não. Por exemplo, 12:20 já conta como "V
 ### Teste de 5 minutos (faça em cada quiosque)
 
 1. Toque na tela inicial, escolha uma emoção negativa e depois um motivo. Deve aparecer "Obrigado! Hoje 1 pessoa…".
-2. Espere 6 s parado na tela de emoções. Ela deve voltar sozinha ao início.
+2. Espere 3 s parado na tela de emoções. Ela deve voltar sozinha ao início.
 3. Segure o dedo **3 segundos no canto superior direito** e digite o PIN. Confira:
    - em "Respostas de hoje", deve aparecer 1;
    - em "Clima", a situação deve estar "Atualizado";
@@ -125,7 +125,7 @@ Se preferir editar o arquivo à mão, use o Bloco de Notas, salve e reinicie o q
 | `kiosk_id` | Código do quiosque (letras, números, `-` ou `_`) | `Q01` |
 | `kiosk_local` | Nome do local | `Portaria` |
 | `pin_admin` | PIN da administração, **entre aspas** | `"2468"` |
-| `logo` | Caminho da imagem do logo | `assets/logo.png` |
+| `logo` / `logo_branco` / `fundo_azul` | Arquivos oficiais da marca: logo azul (telas claras), logo branco (telas azuis) e fundo azul | `assets/Eurostec-logo-azul.png`, `assets/Eurostec-logo-branco.png`, `assets/BG_all_blue.jpg` |
 | `expediente.dias` | Dias com detecção automática do momento | segunda a sexta |
 | `feriados` | Datas sem detecção automática, ex.: `["2026-12-25"]` | vazio |
 | `momentos.<momento>.inicio` / `fim` | Janela de horário de cada momento | tabela da seção 1 |
@@ -146,7 +146,25 @@ Nos textos, `{x}` é trocado pela contagem do dia e `**palavra**` aparece em **d
 
 **Pontuação padrão das emoções:** Feliz +2, Animado +2, Neutro 0, Cansado −1, Preocupado −1, Triste −2, Bravo −2, Furioso −3.
 
-**Logo:** troque o arquivo `assets\logo.png` pelo logo oficial, de preferência PNG com fundo transparente e formato horizontal. Recarregue a tela pela área admin.
+### Identidade visual (design system Eurostec)
+
+As telas e o relatório seguem o design system oficial da empresa (**"Eurostec System"**, versão V54 · nov/2026):
+
+- **Logotipo:** sempre o arquivo oficial, nunca redesenhado ou digitado:
+  - **azul** (`Eurostec-logo-azul.png`) sobre as telas claras;
+  - **branco** (`Eurostec-logo-branco.png`) sobre o fundo azul;
+  - sem caixa, sombra ou contorno, e com respiro de pelo menos 2× a altura do logo até o próximo elemento.
+  - Se o arquivo faltar, o logo simplesmente não aparece.
+- **Fundo azul:** imagem oficial `BG_all_blue.jpg`, nunca degradê feito por programa.
+- **Cores:** os tokens da marca, que são as mesmas da especificação:
+  - `Blue-brand` #0446A4 e `Blue-card` #00AEEF;
+  - `Green` #A7F432, nos botões principais;
+  - `Text` #323232, `Surface` #FBFBFB e `Border` #EBEBEB.
+- **Fonte:** **Google Sans**, com o arquivo real de cada peso (Regular, Medium, SemiBold e Bold), embutida na pasta `quiosque\web\fontes`. Funciona sem internet.
+- **Títulos em dois pesos:** contexto em Regular e parte-chave em Bold. Nos textos do `config.json`, escreva a parte em negrito entre `**asteriscos**`, como em `Como você está **chegando hoje?**`.
+- **Cores das emoções:** não fazem parte do design system. São as cores definidas para os botões do Termômetro e podem ser ajustadas no `config.json`.
+
+Para trocar os arquivos da marca (por exemplo, numa nova versão do design system), substitua os arquivos da pasta `assets` mantendo os nomes, ou aponte outros caminhos em `logo`, `logo_branco` e `fundo_azul`.
 
 ---
 
@@ -402,7 +420,7 @@ TermometroEmocional\
 │   ├── config.json                    configuração DESTE quiosque (criada na instalação)
 │   ├── config.exemplo.json            modelo com todos os campos
 │   └── relatorio.json                 ajustes do relatório
-├── assets\logo.png                    logo (troque pelo oficial)
+├── assets\                           arquivos oficiais da marca (logos azul e branco, fundo azul)
 ├── apps_script\Code.gs                código da planilha central
 ├── quiosque\                          programa do quiosque (servidor + telas)
 ├── relatorio\                         programa do relatório

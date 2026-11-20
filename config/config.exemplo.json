@@ -4,7 +4,9 @@
   "kiosk_local": "Portaria",
   "pin_admin": "2468",
   "porta": 8080,
-  "logo": "assets/logo.png",
+  "logo": "assets/Eurostec-logo-azul.png",
+  "logo_branco": "assets/Eurostec-logo-branco.png",
+  "fundo_azul": "assets/BG_all_blue.jpg",
   "fuso_horario": "America/Sao_Paulo",
   "expediente": {
     "dias": [
@@ -32,7 +34,7 @@
       "icone": "🌅",
       "inicio": "05:00",
       "fim": "10:00",
-      "pergunta": "Como você está chegando hoje?",
+      "pergunta": "Como você está **chegando hoje?**",
       "perguntar_motivo": true
     },
     "saida_almoco": {
@@ -40,7 +42,7 @@
       "icone": "🍽️",
       "inicio": "11:30",
       "fim": "12:20",
-      "pergunta": "Como você está saindo para o almoço?",
+      "pergunta": "Como você está **saindo para o almoço?**",
       "perguntar_motivo": false
     },
     "volta_almoco": {
@@ -48,7 +50,7 @@
       "icone": "💼",
       "inicio": "12:20",
       "fim": "14:00",
-      "pergunta": "Como você está voltando do almoço?",
+      "pergunta": "Como você está **voltando do almoço?**",
       "perguntar_motivo": false
     },
     "saida_final": {
@@ -56,7 +58,7 @@
       "icone": "🏠",
       "inicio": "16:30",
       "fim": "23:59",
-      "pergunta": "Como você está saindo hoje?",
+      "pergunta": "Como você está **saindo hoje?**",
       "perguntar_motivo": true
     }
   },
@@ -137,7 +139,7 @@
   "motivos": {
     "chegada": {
       "negativo": {
-        "titulo": "O que mais pesou?",
+        "titulo": "O que mais **pesou?**",
         "opcoes": [
           "Sono/cansaço",
           "Trânsito/deslocamento",
@@ -149,7 +151,7 @@
         ]
       },
       "positivo": {
-        "titulo": "O que mais contribuiu?",
+        "titulo": "O que mais **contribuiu?**",
         "opcoes": [
           "Descansei bem",
           "Vida pessoal/família",
@@ -161,7 +163,7 @@
     },
     "saida_final": {
       "negativo": {
-        "titulo": "O que mais pesou?",
+        "titulo": "O que mais **pesou?**",
         "opcoes": [
           "Volume/ritmo de trabalho",
           "Relação com colegas",
@@ -174,7 +176,7 @@
         ]
       },
       "positivo": {
-        "titulo": "O que mais contribuiu?",
+        "titulo": "O que mais **contribuiu?**",
         "opcoes": [
           "Dia produtivo",
           "Equipe/colegas",
@@ -220,23 +222,23 @@
     ]
   },
   "textos": {
-    "titulo": "Termômetro Emocional — CIPA Eurostec",
+    "titulo": "Termômetro Emocional — **CIPA Eurostec.**",
     "texto_inicial": "A CIPA quer entender como nossa equipe está se sentindo para cuidar melhor de todos. É **ANÔNIMO**: não registramos nome, foto nem crachá. É **RÁPIDO**: leva menos de 5 segundos. Contamos com a sua participação!",
     "botao_iniciar": "Toque para começar",
     "rodape": "Hoje {x} pessoas já participaram neste ponto.",
     "rodape_um": "Hoje 1 pessoa já participou neste ponto.",
     "rodape_zero": "Seja a primeira pessoa a participar hoje neste ponto!",
-    "titulo_escolher_momento": "Em qual momento do dia você está?",
+    "titulo_escolher_momento": "Em qual **momento do dia** você está?",
     "trocar_momento": "trocar momento",
     "pular": "Pular",
     "titulo_pergunta_do_dia": "Pergunta do dia",
-    "agradecimento": "Obrigado! Hoje {x} pessoas já registraram como estão.",
-    "agradecimento_um": "Obrigado! Hoje 1 pessoa já registrou como está.",
+    "agradecimento": "**Obrigado!** Hoje {x} pessoas já registraram como estão.",
+    "agradecimento_um": "**Obrigado!** Hoje 1 pessoa já registrou como está.",
     "acolhimento": "Obrigado por compartilhar. Se quiser conversar, a CIPA e o RH estão à disposição.",
     "erro_registro": "Não foi possível registrar agora. Por favor, tente de novo."
   },
   "tempos": {
-    "inatividade_s": 6,
+    "inatividade_s": 3,
     "agradecimento_s": 1.5,
     "acolhimento_s": 4,
     "bloqueio_novo_registro_s": 2,

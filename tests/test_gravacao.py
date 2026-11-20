@@ -204,6 +204,9 @@ class TestApiHttp(unittest.TestCase):
         from quiosque.servidor import Aplicacao, criar_servidor
 
         cls.pasta = PastaTemporaria()
+        import shutil
+        from tests.auxiliares import RAIZ
+        shutil.copytree(RAIZ / "assets", cls.pasta.caminho / "assets")
         config = config_teste()
         salvar_config(cls.pasta.caminho / "config" / "config.json", config, fazer_backup=False)
         cls.relogio = RelogioFalso("2026-11-18T07:45:00")
@@ -272,6 +275,13 @@ class TestApiHttp(unittest.TestCase):
         status, r = self.pedir("/api/admin/config", {"config": {"kiosk_id": "Q 01!"}}, token)
         self.assertEqual(status, 400)
         self.assertTrue(r["erros"])
+
+    def test_arquivos_oficiais_da_marca(self):
+        for caminho, tipo in (("/marca/logo-azul", "image/png"), ("/marca/logo-branco", "image/png"),
+                              ("/marca/fundo-azul", "image/jpeg"), ("/fontes/GoogleSans-Bold.woff2", "font/woff2")):
+            with urllib.request.urlopen(self.url + caminho, timeout=5) as r:
+                self.assertEqual(r.headers["Content-Type"], tipo, caminho)
+                self.assertGreater(len(r.read()), 1000)
 
     def test_arquivos_das_telas(self):
         for caminho, tipo in (("/", "text/html"), ("/app.js", "application/javascript"), ("/estilo.css", "text/css")):

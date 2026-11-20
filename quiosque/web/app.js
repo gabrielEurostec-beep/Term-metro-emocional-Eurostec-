@@ -38,7 +38,9 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  /* "**texto**" vira negrito: títulos em dois pesos (Regular + Bold), como pede o design system. */
   function negritoSimples(t) { return escapar(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
+  function semMarcacao(t) { return String(t).replace(/\*\*/g, ''); }
   function momentoPorId(id) {
     for (var i = 0; i < estado.momentos.length; i++) if (estado.momentos[i].id === id) return estado.momentos[i];
     return null;
@@ -133,23 +135,15 @@
 
   // ------------------------------------------------------------------ desenho
   function desenharTudo() {
-    document.title = texto('titulo') || document.title;
-    $('inicio-titulo').textContent = texto('titulo');
+    document.title = semMarcacao(texto('titulo')) || document.title;
+    $('inicio-titulo').innerHTML = negritoSimples(texto('titulo'));
     $('inicio-texto').innerHTML = negritoSimples(texto('texto_inicial'));
     $('botao-iniciar').textContent = texto('botao_iniciar');
-    $('momento-titulo').textContent = texto('titulo_escolher_momento');
+    $('momento-titulo').innerHTML = negritoSimples(texto('titulo_escolher_momento'));
     $('botao-trocar-momento').textContent = texto('trocar_momento');
     $('motivo-pular').textContent = texto('pular');
     $('pergunta-pular').textContent = texto('pular');
     $('pergunta-selo').textContent = texto('titulo_pergunta_do_dia');
-
-    var emojis = $('inicio-emojis');
-    emojis.innerHTML = '';
-    estado.emocoes.forEach(function (e, i) {
-      var s = el('span', '', e.emoji);
-      s.style.animationDelay = (i * 0.25) + 's';
-      emojis.appendChild(s);
-    });
 
     var grade = $('emocoes-grade');
     grade.innerHTML = '';
@@ -221,7 +215,7 @@
   function definirMomento(id, automatico) {
     fluxo.momento = id;
     fluxo.automatico = automatico;
-    $('emocoes-titulo').textContent = momentoPorId(id).pergunta;
+    $('emocoes-titulo').innerHTML = negritoSimples(momentoPorId(id).pergunta);
     var grade = $('emocoes-grade');
     grade.classList.remove('escolhendo');
     grade.querySelectorAll('.emocao').forEach(function (b) { b.classList.remove('escolhido'); b.disabled = false; });
@@ -301,7 +295,7 @@
     chip.style.setProperty('--cor-texto', fluxo.emocao.cor_texto);
     chip.appendChild(el('span', 'emoji', fluxo.emocao.emoji));
     chip.appendChild(el('span', '', fluxo.emocao.nome));
-    $('motivo-titulo').textContent = grupo.titulo;
+    $('motivo-titulo').innerHTML = negritoSimples(grupo.titulo);
     var caixa = $('motivo-opcoes');
     caixa.innerHTML = '';
     var n = grupo.opcoes.length;
@@ -351,7 +345,7 @@
 
   function mostrarObrigado() {
     var x = fluxo.contagem || (estado && estado.contagem_hoje) || 1;
-    $('obrigado-texto').textContent = x === 1 ? texto('agradecimento_um') : texto('agradecimento').replace('{x}', x);
+    $('obrigado-texto').innerHTML = negritoSimples(x === 1 ? texto('agradecimento_um') : texto('agradecimento').replace('{x}', x));
     var acolher = !!(fluxo.emocao && fluxo.emocao.acolhimento);
     $('obrigado-acolhimento').textContent = acolher ? texto('acolhimento') : '';
     mostrar('tela-obrigado');
@@ -526,7 +520,9 @@
         { r: 'Código do quiosque (ex.: Q01)', c: 'kiosk_id' },
         { r: 'Local', c: 'kiosk_local' },
         { r: 'PIN da administração', c: 'pin_admin', modo: 'numeric' },
-        { r: 'Arquivo do logo', c: 'logo' }
+        { r: 'Logo azul (telas claras)', c: 'logo' },
+        { r: 'Logo branco (telas azuis)', c: 'logo_branco' },
+        { r: 'Fundo azul oficial', c: 'fundo_azul' }
       ] }
     ];
     secoes.push({ titulo: 'Momentos do dia (horário automático, segunda a sexta)', tabelaMomentos: true });
@@ -696,9 +692,10 @@
     }).catch(function () { /* sem suporte ou sem permissão: o Windows cuida (README) */ });
   }
 
+  /* Sem o arquivo oficial, o logo some: nunca é substituído por texto (regra da marca). */
   function verificarLogo() {
     document.querySelectorAll('img.logo').forEach(function (img) {
-      function semLogo() { img.parentNode.classList.add('sem-logo'); }
+      function semLogo() { img.classList.add('sem-logo'); }
       img.addEventListener('error', semLogo);
       if (img.complete && img.naturalWidth === 0) semLogo();
     });

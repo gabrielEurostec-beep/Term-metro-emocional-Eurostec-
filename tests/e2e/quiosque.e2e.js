@@ -38,7 +38,9 @@ function saude(p) {
 async function iniciarServidor(dataHora, configExtra) {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'termometro-e2e-'));
   fs.mkdirSync(path.join(base, 'assets'));
-  fs.copyFileSync(path.join(RAIZ, 'assets', 'logo.png'), path.join(base, 'assets', 'logo.png'));
+  for (const nome of fs.readdirSync(path.join(RAIZ, 'assets'))) {
+    fs.copyFileSync(path.join(RAIZ, 'assets', nome), path.join(base, 'assets', nome));
+  }
   if (configExtra) {
     fs.mkdirSync(path.join(base, 'config'));
     fs.writeFileSync(path.join(base, 'config', 'config.json'), JSON.stringify(configExtra));
@@ -175,18 +177,21 @@ async function cenario(nome, fn) {
     await fechar();
   });
 
-  await cenario('Inatividade: 6 s sem toque na tela de emoções volta ao início sem gravar nada', async () => {
+  await cenario('Inatividade: 3 s sem toque na tela de emoções volta ao início sem gravar nada', async () => {
     const { srv, page, fechar } = await abrir('2026-11-18T09:00:00');
     await tocarInicio(page);
     await aguardarTela(page, 'tela-emocoes');
-    await espera(4000);
-    assert.equal(await tela(page), 'tela-emocoes');
+    const desde = Date.now() - 650;
+    await espera(1500);
+    assert.equal(await tela(page), 'tela-emocoes', 'ainda na tela antes dos 3 s');
     await page.waitForFunction(() => window.__termometro.tela() === 'tela-inicio', null, { timeout: 3000 });
+    const decorrido = Date.now() - desde;
+    assert.ok(decorrido >= 2900 && decorrido <= 4200, `voltou em ${decorrido} ms (esperado ~3 s)`);
     assert.equal(lerCsv(srv.base).length, 0);
     await fechar();
   });
 
-  await cenario('Motivo é opcional: 6 s parado no motivo volta ao início e a emoção continua gravada', async () => {
+  await cenario('Motivo é opcional: 3 s parado no motivo volta ao início e a emoção continua gravada', async () => {
     const { srv, page, fechar } = await abrir('2026-11-18T07:50:00');
     await tocarInicio(page);
     await aguardarTela(page, 'tela-emocoes');

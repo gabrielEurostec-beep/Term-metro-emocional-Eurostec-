@@ -57,7 +57,9 @@ PADRAO: dict = {
     "kiosk_local": "Portaria",
     "pin_admin": "2468",
     "porta": 8080,
-    "logo": "assets/logo.png",
+    "logo": "assets/Eurostec-logo-azul.png",
+    "logo_branco": "assets/Eurostec-logo-branco.png",
+    "fundo_azul": "assets/BG_all_blue.jpg",
     "fuso_horario": "America/Sao_Paulo",
     "expediente": {
         "dias": ["segunda", "terça", "quarta", "quinta", "sexta"],
@@ -73,7 +75,7 @@ PADRAO: dict = {
             "icone": "🌅",
             "inicio": "05:00",
             "fim": "10:00",
-            "pergunta": "Como você está chegando hoje?",
+            "pergunta": "Como você está **chegando hoje?**",
             "perguntar_motivo": True,
         },
         "saida_almoco": {
@@ -81,7 +83,7 @@ PADRAO: dict = {
             "icone": "🍽️",
             "inicio": "11:30",
             "fim": "12:20",
-            "pergunta": "Como você está saindo para o almoço?",
+            "pergunta": "Como você está **saindo para o almoço?**",
             "perguntar_motivo": False,
         },
         "volta_almoco": {
@@ -89,7 +91,7 @@ PADRAO: dict = {
             "icone": "💼",
             "inicio": "12:20",
             "fim": "14:00",
-            "pergunta": "Como você está voltando do almoço?",
+            "pergunta": "Como você está **voltando do almoço?**",
             "perguntar_motivo": False,
         },
         "saida_final": {
@@ -97,7 +99,7 @@ PADRAO: dict = {
             "icone": "🏠",
             "inicio": "16:30",
             "fim": "23:59",
-            "pergunta": "Como você está saindo hoje?",
+            "pergunta": "Como você está **saindo hoje?**",
             "perguntar_motivo": True,
         },
     },
@@ -122,7 +124,7 @@ PADRAO: dict = {
     "motivos": {
         "chegada": {
             "negativo": {
-                "titulo": "O que mais pesou?",
+                "titulo": "O que mais **pesou?**",
                 "opcoes": [
                     "Sono/cansaço",
                     "Trânsito/deslocamento",
@@ -134,7 +136,7 @@ PADRAO: dict = {
                 ],
             },
             "positivo": {
-                "titulo": "O que mais contribuiu?",
+                "titulo": "O que mais **contribuiu?**",
                 "opcoes": [
                     "Descansei bem",
                     "Vida pessoal/família",
@@ -146,7 +148,7 @@ PADRAO: dict = {
         },
         "saida_final": {
             "negativo": {
-                "titulo": "O que mais pesou?",
+                "titulo": "O que mais **pesou?**",
                 "opcoes": [
                     "Volume/ritmo de trabalho",
                     "Relação com colegas",
@@ -159,7 +161,7 @@ PADRAO: dict = {
                 ],
             },
             "positivo": {
-                "titulo": "O que mais contribuiu?",
+                "titulo": "O que mais **contribuiu?**",
                 "opcoes": [
                     "Dia produtivo",
                     "Equipe/colegas",
@@ -184,7 +186,7 @@ PADRAO: dict = {
         ],
     },
     "textos": {
-        "titulo": "Termômetro Emocional — CIPA Eurostec",
+        "titulo": "Termômetro Emocional — **CIPA Eurostec.**",
         "texto_inicial": (
             "A CIPA quer entender como nossa equipe está se sentindo para cuidar "
             "melhor de todos. É **ANÔNIMO**: não registramos nome, foto nem crachá. "
@@ -194,12 +196,12 @@ PADRAO: dict = {
         "rodape": "Hoje {x} pessoas já participaram neste ponto.",
         "rodape_um": "Hoje 1 pessoa já participou neste ponto.",
         "rodape_zero": "Seja a primeira pessoa a participar hoje neste ponto!",
-        "titulo_escolher_momento": "Em qual momento do dia você está?",
+        "titulo_escolher_momento": "Em qual **momento do dia** você está?",
         "trocar_momento": "trocar momento",
         "pular": "Pular",
         "titulo_pergunta_do_dia": "Pergunta do dia",
-        "agradecimento": "Obrigado! Hoje {x} pessoas já registraram como estão.",
-        "agradecimento_um": "Obrigado! Hoje 1 pessoa já registrou como está.",
+        "agradecimento": "**Obrigado!** Hoje {x} pessoas já registraram como estão.",
+        "agradecimento_um": "**Obrigado!** Hoje 1 pessoa já registrou como está.",
         "acolhimento": (
             "Obrigado por compartilhar. Se quiser conversar, "
             "a CIPA e o RH estão à disposição."
@@ -207,7 +209,7 @@ PADRAO: dict = {
         "erro_registro": "Não foi possível registrar agora. Por favor, tente de novo.",
     },
     "tempos": {
-        "inatividade_s": 6,
+        "inatividade_s": 3,
         "agradecimento_s": 1.5,
         "acolhimento_s": 4,
         "bloqueio_novo_registro_s": 2,
@@ -349,7 +351,8 @@ def validar_config(config: dict) -> list[str]:
     if not isinstance(pin, str) or not pin.isdigit() or not 4 <= len(pin) <= 8:
         erros.append("'pin_admin' deve ter de 4 a 8 números, entre aspas (ex.: \"2468\").")
     numero(config.get("porta"), "porta", 1024, 65535)
-    texto(config.get("logo"), "logo")
+    for chave in ("logo", "logo_branco", "fundo_azul"):
+        texto(config.get(chave), chave)
 
     # Expediente e feriados
     expediente = config.get("expediente", {})
