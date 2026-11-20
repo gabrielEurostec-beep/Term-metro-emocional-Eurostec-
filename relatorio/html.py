@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import base64
 import html as _html
-from datetime import datetime
+import sys
+from datetime import date, datetime
 from pathlib import Path
 
 import plotly.graph_objects as go
@@ -19,21 +20,34 @@ from relatorio.formatacao import (
     data_br, decimal, eh_numero, inteiro, nome_momento, percentual,
 )
 
-# --------------------------------------------------------------- identidade
-AZUL = "#0446a4"
-AZUL_CLARO = "#00aeef"
-VERDE = "#a7f432"
-TEXTO = "#323232"
-FUNDO = "#fbfbfb"
-SUPERFICIE = "#ffffff"
-GRADE = "#e1e0d9"
-EIXO = "#c3c2b7"
-MUDO = "#6b6a66"
-INSUF_FUNDO = "#efeeea"
-INSUF_MAPA = "#d6d5cf"  # cinza mais escuro que o meio da escala (para não confundir com 0)
+# ------------------------------------------- identidade (Eurostec System)
+# Cores da moldura da página (tokens oficiais). As cores das emoções e das
+# séries dos gráficos ficam em suas próprias constantes, mais abaixo.
+AZUL = "#0446a4"            # Blue-brand: títulos, cabeçalho de tabela, números
+AZUL_CARD = "#00aeef"       # Blue-card: marcadores "/"
+VERDE = "#a7f432"           # Green: destaque
+TEXTO = "#323232"           # Text
+TEXTO_CATALOGO = "#575756"  # Text-catalog: notas, rodapé, eixos
+BORDA = "#ebebeb"           # Border: fios e contornos
+FUNDO = "#fbfbfb"           # Surface: zebrado, painéis, fundo da página
+SUPERFICIE = "#ffffff"      # White: fundo dos gráficos
+GRADIENTE_INICIO = "#0aa1f4"  # Gradient-start (brilho dos cards de número)
+GRADIENTE_FIM = "#02358e"     # Gradient-end
+GRADE = BORDA
+EIXO = TEXTO_CATALOGO
+MUDO = TEXTO_CATALOGO
+INSUF_FUNDO = FUNDO
+INSUF_MAPA = "#d6d5cf"  # mapa de calor: cinza mais escuro que o meio da escala (para não confundir com 0)
 OUTRAS = "#d6d5cf"  # segmento "Outras (<5 cada)" — mais claro que o cinza do Neutro
 NOTA_OMITIDAS = "Categorias com menos de 5 respostas foram omitidas do gráfico (aparecem como “<5” na tabela)."
-FONTE = '"Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif'
+FONTE = '"Google Sans", "Segoe UI", system-ui, -apple-system, Arial, sans-serif'
+PESOS_FONTE = [  # (peso, arquivo) — só pesos com arquivo real; nada de negrito sintetizado
+    (400, "GoogleSans-Regular.woff2"),
+    (500, "GoogleSans-Medium.woff2"),
+    (600, "GoogleSans-SemiBold.woff2"),
+    (700, "GoogleSans-Bold.woff2"),
+]
+LOGO_AZUL = "Eurostec-logo-azul.png"
 
 # Rampa ordinal azul para os 4 momentos (validada: tom único, claridade crescente)
 CORES_MOMENTOS = ["#86b6ef", "#3987e5", "#1c5cab", "#0d366b"]
@@ -96,7 +110,7 @@ def _layout_base(fig: go.Figure, altura: int, **extra) -> go.Figure:
         plot_bgcolor=SUPERFICIE,
         font=dict(family=FONTE, color=TEXTO, size=13),
         separators=",.",
-        hoverlabel=dict(bgcolor=SUPERFICIE, bordercolor=EIXO, font=dict(family=FONTE, color=TEXTO, size=13)),
+        hoverlabel=dict(bgcolor=SUPERFICIE, bordercolor=BORDA, font=dict(family=FONTE, color=TEXTO, size=13)),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
                     font=dict(size=12), title=None, traceorder="normal"),
         barcornerradius=4,
@@ -176,9 +190,15 @@ def detalhes(titulo: str, conteudo: str, aberto: bool = False) -> str:
             f'<div class="detalhes-corpo">{conteudo}</div></details>')
 
 
+def com_ponto(titulo: str) -> str:
+    """Títulos (h2, h3, painéis) terminam com ponto final (regra do Eurostec System)."""
+    titulo = titulo.rstrip()
+    return titulo if titulo.endswith((".", "?", "!")) else titulo + "."
+
+
 def cartao(titulo: str, subtitulo: str, corpo: str, largura: str = "") -> str:
     sub = f'<p class="subtitulo">{subtitulo}</p>' if subtitulo else ""
-    return f'<article class="cartao {largura}"><h3>{_esc(titulo)}</h3>{sub}{corpo}</article>'
+    return f'<article class="cartao {largura}"><h3>{_esc(com_ponto(titulo))}</h3>{sub}{corpo}</article>'
 
 
 # ================================================================== gráficos
@@ -334,8 +354,8 @@ def grafico_mapa_calor(r: Resultado) -> str:
     for dia, linha, ns in zip(y, g["z"], g["n"]):
         for m, v, n in zip(x, linha, ns):
             if v is None:
-                fig.add_annotation(x=m, y=dia, text="<i>dados<br>insuficientes</i>", showarrow=False,
-                                   font=dict(color="#45443f", size=11))
+                fig.add_annotation(x=m, y=dia, text="dados<br>insuficientes", showarrow=False,
+                                   font=dict(color=TEXTO, size=11))
             else:
                 cor = _cor_texto(_cor_escala(v, limite))
                 fig.add_annotation(
@@ -491,78 +511,212 @@ def grafico_pergunta_do_dia(r: Resultado) -> str:
 CSS = """
 :root {
   color-scheme: light;
-  --azul: #0446a4; --azul-claro: #00aeef; --verde: #a7f432;
-  --texto: #323232; --fundo: #fbfbfb; --cartao: #ffffff;
-  --linha: #e1e0d9; --mudo: #6b6a66; --insuf: #efeeea;
+  --Blue-brand: #0446a4; --Blue-card: #00aeef; --Green: #a7f432;
+  --Gradient-start: #0aa1f4; --Gradient-end: #02358e;
+  --Text: #323232; --Text-catalog: #575756;
+  --Border: #ebebeb; --Surface: #fbfbfb; --White: #ffffff;
+  --font: "Google Sans", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--fundo); color: var(--texto);
-  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; font-size: 15px; line-height: 1.5; }
-.topo { background: var(--azul); color: #fff; border-bottom: 6px solid var(--verde); }
-.topo-interno { max-width: 1180px; margin: 0 auto; padding: 22px 20px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-.topo img { height: 52px; background: #fff; border-radius: 8px; padding: 6px 10px; }
-.marca-texto { font-weight: 700; letter-spacing: .08em; background: #fff; color: var(--azul); border-radius: 8px; padding: 10px 14px; }
-.topo h1 { margin: 0; font-size: 26px; line-height: 1.2; }
-.topo p { margin: 4px 0 0; opacity: .92; }
-nav.sumario { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid var(--linha); }
-nav.sumario ul { max-width: 1180px; margin: 0 auto; padding: 0 12px; list-style: none; display: flex; gap: 2px; overflow-x: auto; }
-nav.sumario a { display: block; padding: 11px 12px; color: var(--azul); text-decoration: none; font-weight: 600; white-space: nowrap; font-size: 14px; }
-nav.sumario a:hover, nav.sumario a:focus { background: #eef4fc; }
-main { max-width: 1180px; margin: 0 auto; padding: 8px 20px 40px; }
-section { margin-top: 28px; scroll-margin-top: 56px; }
-h2 { color: var(--azul); font-size: 22px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--azul-claro); }
-h3 { margin: 0 0 4px; font-size: 16px; color: var(--texto); }
-.subtitulo { margin: 0 0 10px; color: var(--mudo); font-size: 14px; }
-.cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+body { margin: 0; background: var(--Surface); color: var(--Text); font-family: var(--font);
+  font-size: 15px; line-height: 1.5; font-weight: 400; }
+b, strong { font-weight: 700; }
+h1, h2, h3 { font-weight: 700; }
+
+/* Cabeçalho (RelatorioCabecalho): logo azul acima do título; tudo derivado de T */
+.cab { background: var(--White); }
+.cab-in { --T: 28px; max-width: 1180px; margin: 0 auto; padding: 40px 20px 28px; }
+.cab-logo { display: block; width: calc(var(--T) * 4.1); height: auto; }
+.cab-t { margin: calc(var(--T) * 1) 0 0; font-size: var(--T); line-height: 1.3; font-weight: 400;
+  color: var(--Blue-brand); letter-spacing: -.01em; }
+.cab-t b { font-weight: 700; }
+.cab-apoio { margin: 10px 0 0; color: var(--Text-catalog); font-size: 14px; line-height: 1.4; }
+
+nav.sumario { position: sticky; top: 0; z-index: 10; background: var(--White);
+  border-top: 1px solid var(--Border); border-bottom: 1px solid var(--Border); }
+nav.sumario ul { max-width: 1180px; margin: 0 auto; padding: 0 8px; list-style: none; display: flex; gap: 2px; overflow-x: auto; }
+nav.sumario a { display: block; padding: 11px 12px; color: var(--Blue-brand); text-decoration: none; font-weight: 500;
+  white-space: nowrap; font-size: 14px; }
+nav.sumario a:hover, nav.sumario a:focus { background: var(--Surface); text-decoration: underline; }
+
+main { max-width: 1180px; margin: 0 auto; padding: 8px 20px 48px; }
+section { margin-top: 40px; scroll-margin-top: 56px; }
+h2 { color: var(--Blue-brand); font-size: 22px; line-height: 1.3; margin: 0 0 16px; }
+h3 { margin: 0 0 4px; font-size: 16px; line-height: 1.35; color: var(--Blue-brand); }
+.subtitulo { margin: 0 0 12px; color: var(--Text-catalog); font-size: 14px; }
+
+/* Painéis: White + contorno Border, cantos 16px, sem faixa e sem sombra */
+.cartao { background: var(--White); border: 1px solid var(--Border); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; }
 .grade-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .grade-2 > .cartao { margin-bottom: 0; min-width: 0; }
-.achados { margin: 0; padding-left: 20px; }
-.achados li { margin: 6px 0; }
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
-.kpi { background: var(--cartao); border: 1px solid var(--linha); border-left: 5px solid var(--azul); border-radius: 10px; padding: 12px 14px; }
-.kpi .rotulo { color: var(--mudo); font-size: 13px; }
-.kpi .valor { font-size: 30px; font-weight: 600; line-height: 1.2; color: var(--texto); }
-.kpi .detalhe { color: var(--mudo); font-size: 12px; }
-.aviso { background: #eef7d9; border: 1px solid #c9e98a; border-radius: 8px; padding: 10px 14px; font-size: 14px; }
+
+/* Listas com marcador "/" Bold Blue-card */
+.lst { list-style: none; margin: 0; padding: 0; }
+.lst li { position: relative; padding-left: 18px; margin: 8px 0; line-height: 1.55; }
+.lst li::before { content: "/"; position: absolute; left: 0; top: 0; font-weight: 700; color: var(--Blue-card); }
+.lst .lst { margin-top: 4px; }
+
+/* Cards de número: degradê de card, sem sombra, sem borda lateral */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin: 20px 0 0; }
+.st { border-radius: 16px; padding: 20px 20px 18px; color: var(--White);
+  background:
+    radial-gradient(120% 95% at 100% 0%, rgba(10, 161, 244, .9) 0%, rgba(10, 161, 244, 0) 58%),
+    linear-gradient(135deg, var(--Blue-brand) 0%, var(--Gradient-end) 100%); }
+.st-n { font-size: 34px; line-height: 1.1; font-weight: 700; }
+.st-n.txt { font-size: 20px; line-height: 1.25; }
+.st-r { margin-top: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 1.3;
+  font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.st-r::before { content: ""; flex: none; width: 2px; height: 14px; background: var(--White); transform: skewX(-14.5deg); }
+.st-nota { margin-top: 6px; font-size: 11px; line-height: 1.4; }
+
+/* Destaque verde: um por página */
+.dst { background: var(--Green); color: var(--Blue-brand); font-size: 13px; line-height: 19px;
+  border-radius: 12px; padding: 12px 16px; margin: 16px 0 0; }
+.dst b { font-weight: 700; }
+
+/* Tabelas: cabeçalho Blue-brand, zebrado Surface, fios Border, total Bold Blue-brand */
 .tabela-rolagem { overflow-x: auto; margin: 8px 0; }
-table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
-th, td { padding: 7px 10px; border-bottom: 1px solid var(--linha); text-align: left; vertical-align: top; }
-thead th { background: var(--azul); color: #fff; font-weight: 600; position: sticky; top: 0; }
-tbody th { font-weight: 600; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--Border); text-align: left; vertical-align: top; }
+thead th { background: var(--Blue-brand); color: var(--White); font-weight: 600; border-bottom: 0; position: sticky; top: 0; }
+thead th:first-child { border-top-left-radius: 8px; }
+thead th:last-child { border-top-right-radius: 8px; }
+tbody th { font-weight: 500; color: var(--Text); }
+tbody tr:nth-child(even) th, tbody tr:nth-child(even) td { background: var(--Surface); }
 .num { text-align: right; white-space: nowrap; }
-td.insuf { background: var(--insuf); color: var(--mudo); font-style: italic; text-align: center; white-space: nowrap; }
-td.poucos { color: var(--mudo); }
-tr.total th, tr.total td { background: #f4f7fc; font-weight: 600; }
-tr.total td.insuf { font-weight: 400; }
-.nota { color: var(--mudo); font-size: 13px; margin: 6px 0 0; }
-.vazio { color: var(--mudo); font-style: italic; }
+td.insuf { color: var(--Text-catalog); text-align: center; white-space: nowrap; }
+td.poucos { color: var(--Text-catalog); }
+tbody tr.total th, tbody tr.total td { font-weight: 700; color: var(--Blue-brand); background: var(--White);
+  border-top: 1px solid var(--Blue-brand); }
+tbody tr.total td.insuf { font-weight: 400; color: var(--Text-catalog); }
+
+.nota { color: var(--Text-catalog); font-size: 12px; line-height: 1.45; margin: 8px 0 0; }
+.vazio { color: var(--Text-catalog); }
 details { margin: 8px 0 0; }
-summary { cursor: pointer; color: var(--azul); font-weight: 600; padding: 6px 0; }
+summary { cursor: pointer; color: var(--Blue-brand); font-weight: 600; padding: 6px 0; }
 .detalhes-corpo { padding: 4px 0 8px; }
-.legenda-insuf { display: inline-block; background: var(--insuf); color: var(--mudo); font-style: italic; padding: 0 6px; border-radius: 4px; }
-footer { max-width: 1180px; margin: 0 auto; padding: 20px; color: var(--mudo); font-size: 13px; border-top: 1px solid var(--linha); }
+
+/* Rodapé: fio Border, Text-catalog */
+.rod { border-top: 1px solid var(--Border); background: var(--White); }
+.rod-in { max-width: 1180px; margin: 0 auto; padding: 16px 20px; display: flex; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; color: var(--Text-catalog); font-size: 11px; line-height: 1.4; }
+
 @media (max-width: 900px) {
   .grade-2 { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 640px) {
-  .topo h1 { font-size: 21px; }
-  main { padding: 8px 12px 32px; }
+  .cab-in { --T: 22px; padding: 28px 16px 20px; }
+  main { padding: 8px 16px 32px; }
 }
 @media print {
   nav.sumario { display: none; }
-  .cartao, .kpi { break-inside: avoid; }
+  .cartao, .st { break-inside: avoid; }
 }
 """
 
+SCRIPT_PAGINA = """
+(function () {
+  // Título em dois pesos: se quebrar, a parte em negrito começa linha nova.
+  function quebrarTitulo() {
+    var t = document.querySelector(".cab-t");
+    if (!t) return;
+    var antiga = t.querySelector("br.auto");
+    if (antiga) antiga.remove();
+    var negrito = t.querySelector("b");
+    var entrelinha = parseFloat(getComputedStyle(t).lineHeight);
+    if (negrito && t.offsetHeight > entrelinha * 1.5) {
+      var br = document.createElement("br");
+      br.className = "auto";
+      t.insertBefore(br, negrito);
+    }
+  }
+  function reajustar() {
+    quebrarTitulo();
+    window.dispatchEvent(new Event("resize"));  // gráficos (plotly responsive)
+  }
+  var pronto = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+  window.addEventListener("load", function () { pronto.then(reajustar); });
+  window.addEventListener("resize", quebrarTitulo);
+  document.querySelectorAll("details").forEach(function (d) {
+    d.addEventListener("toggle", function () { window.dispatchEvent(new Event("resize")); });
+  });
+})();
+"""
+
+
+def _raiz(raiz: Path | None) -> Path:
+    if raiz:
+        return Path(raiz)
+    from relatorio.configuracao import raiz_projeto
+
+    return raiz_projeto()
+
+
+def localizar_fontes(raiz: Path | None = None) -> Path | None:
+    """Pasta das fontes Google Sans (.woff2).
+
+    Procura primeiro dentro do executável (sys._MEIPASS/quiosque/web/fontes)
+    e depois na pasta do projeto (<raiz>/quiosque/web/fontes).
+    """
+    candidatos = []
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        candidatos.append(Path(meipass) / "quiosque" / "web" / "fontes")
+    candidatos.append(_raiz(raiz) / "quiosque" / "web" / "fontes")
+    for pasta in candidatos:
+        if pasta.is_dir() and any((pasta / arquivo).is_file() for _, arquivo in PESOS_FONTE):
+            return pasta
+    return None
+
+
+def localizar_logo(raiz: Path | None = None) -> Path | None:
+    """Logo azul oficial: <raiz>/assets/ ou, no executável, sys._MEIPASS/assets/."""
+    candidatos = [_raiz(raiz) / "assets" / LOGO_AZUL]
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        candidatos.append(Path(meipass) / "assets" / LOGO_AZUL)
+    for caminho in candidatos:
+        if caminho.is_file() and caminho.stat().st_size > 0:
+            return caminho
+    return None
+
+
+def _font_faces(raiz: Path | None) -> str:
+    """Um @font-face por peso, com o arquivo real embutido (woff2 em base64)."""
+    pasta = localizar_fontes(raiz)
+    if pasta is None:
+        return ""
+    blocos = []
+    for peso, arquivo in PESOS_FONTE:
+        caminho = pasta / arquivo
+        if not caminho.is_file():
+            continue
+        dados = base64.b64encode(caminho.read_bytes()).decode("ascii")
+        blocos.append(
+            '@font-face { font-family: "Google Sans"; font-style: normal; '
+            f"font-weight: {peso}; font-display: block; "
+            f'src: url(data:font/woff2;base64,{dados}) format("woff2"); }}'
+        )
+    return "\n".join(blocos)
+
 
 def _logo(raiz: Path | None) -> str:
-    if raiz:
-        caminho = raiz / "assets" / "logo.png"
-        if caminho.exists() and caminho.stat().st_size > 0:
-            dados = base64.b64encode(caminho.read_bytes()).decode("ascii")
-            return f'<img src="data:image/png;base64,{dados}" alt="Eurostec">'
-    return '<span class="marca-texto">EUROSTEC</span>'
+    """Logo oficial embutido. Se o arquivo não existir, o logo é omitido
+    (o logo nunca é reconstruído com texto)."""
+    caminho = localizar_logo(raiz)
+    if caminho is None:
+        return ""
+    dados = base64.b64encode(caminho.read_bytes()).decode("ascii")
+    return f'<img class="cab-logo" src="data:image/png;base64,{dados}" alt="Eurostec">'
+
+
+def _periodo_titulo(inicio: date, fim: date) -> str:
+    if inicio == fim:
+        return f"relatório de {data_br(fim)}."
+    if inicio.year == fim.year:
+        return f"relatório de {inicio.strftime('%d/%m')} a {data_br(fim)}."
+    return f"relatório de {data_br(inicio)} a {data_br(fim)}."
 
 
 def _pct_ou_texto(valor) -> str:
@@ -583,11 +737,13 @@ def _kpis(r: Resultado) -> str:
         ("Emoções positivas", _pct_ou_texto(k["pct_positivas"]),
          f"negativas: {_pct_ou_texto(k['pct_negativas'])}" if k["total"] >= r.minimo else ""),
     ]
-    return '<div class="kpis">' + "".join(
-        f'<div class="kpi"><div class="rotulo">{_esc(a)}</div><div class="valor">{_esc(b)}</div>'
-        f'<div class="detalhe">{_esc(c)}</div></div>'
-        for a, b, c in itens
-    ) + "</div>"
+    cards = []
+    for rotulo, valor, nota in itens:
+        classe = "st-n" if len(valor) <= 8 else "st-n txt"
+        nota_html = f'<div class="st-nota">{_esc(nota)}</div>' if nota else ""
+        cards.append(f'<div class="st"><div class="{classe}">{_esc(valor)}</div>'
+                     f'<div class="st-r">{_esc(rotulo)}</div>{nota_html}</div>')
+    return '<div class="stats">' + "".join(cards) + "</div>"
 
 
 def gerar_html(r: Resultado, resumo: list[str], caminho: Path, info_leitura: dict,
@@ -599,16 +755,16 @@ def gerar_html(r: Resultado, resumo: list[str], caminho: Path, info_leitura: dic
     secoes = []
     secoes.append(f"""
 <section id="resumo">
-  <h2>Resumo</h2>
-  <article class="cartao"><ul class="achados">{''.join(f'<li>{_esc(f)}</li>' for f in resumo)}</ul></article>
+  <h2>Resumo.</h2>
+  <article class="cartao"><ul class="lst">{''.join(f'<li>{_esc(f)}</li>' for f in resumo)}</ul></article>
   {_kpis(r)}
-  <p class="aviso">Este relatório é anônimo: não há nome, foto nem crachá. Recortes com menos de {m} respostas
-  aparecem como <span class="legenda-insuf">dados insuficientes</span> e categorias com 1 a {m - 1} respostas aparecem como “&lt;{m}”, sem número nem percentual.</p>
+  <p class="dst"><b>Relatório anônimo.</b> Não há nome, foto nem crachá. Recortes com menos de {m} respostas
+  aparecem como “dados insuficientes”, e categorias com 1 a {m - 1} respostas aparecem como “&lt;{m}”, sem número nem percentual.</p>
 </section>""")
 
     secoes.append(f"""
 <section id="participacao">
-  <h2>Participação</h2>
+  <h2>Participação.</h2>
   {cartao("Participação por semana", "Acompanhe se a adesão está caindo. Percentual do público esperado em cada momento.",
           grafico_participacao_semanal(r) + detalhes("Ver tabela", tabela_html(t["participacao_semana"])))}
   {cartao("Participação por momento", "", tabela_html(t["participacao"])
@@ -622,14 +778,14 @@ def gerar_html(r: Resultado, resumo: list[str], caminho: Path, info_leitura: dic
 
     secoes.append(f"""
 <section id="emocoes">
-  <h2>Emoções</h2>
+  <h2>Emoções.</h2>
   {cartao("Distribuição das emoções por momento", "Percentual de cada emoção entre as respostas de cada momento.",
           grafico_emocoes(r) + _nota_outras(r) + detalhes("Ver tabela", tabela_html(t["emocoes_momento"])))}
 </section>""")
 
     secoes.append(f"""
 <section id="humor">
-  <h2>Índice de humor</h2>
+  <h2>Índice de humor.</h2>
   {cartao("Índice de humor por momento", "Média das pontuações: Feliz e Animado +2, Neutro 0, Cansado e Preocupado −1, Triste e Bravo −2, Furioso −3.",
           tabela_html(t["humor_momento"]))}
   {cartao("Humor ao longo do dia, por dia da semana", "Cada linha mostra os 4 momentos de um dia da semana. A linha preta é a média de todos os dias. Dias com poucos dados (como fins de semana) aparecem só na tabela.",
@@ -640,14 +796,14 @@ def gerar_html(r: Resultado, resumo: list[str], caminho: Path, info_leitura: dic
 
     secoes.append(f"""
 <section id="variacoes">
-  <h2>Variações do dia</h2>
+  <h2>Variações do dia.</h2>
   {cartao("Como o humor muda entre os momentos", "Manhã = saída p/ almoço − chegada · Almoço = volta − saída p/ almoço · Tarde = saída do dia − volta do almoço · Dia = saída do dia − chegada.",
           grafico_variacoes(r) + tabela_html(t["variacoes"]) + detalhes("Por ponto de coleta", tabela_html(t["variacoes_quiosque"])))}
 </section>""")
 
     secoes.append(f"""
 <section id="clima">
-  <h2>Humor e clima</h2>
+  <h2>Humor e clima.</h2>
   <div class="grade-2">
   {cartao("Por condição do tempo", "", grafico_clima(r, "clima_condicao", "Condição do tempo") + detalhes("Ver tabela", tabela_html(t["clima_condicao"])), "meio")}
   {cartao("Por faixa de temperatura", "", grafico_clima(r, "clima_temperatura", "Temperatura no momento da resposta") + detalhes("Ver tabela", tabela_html(t["clima_temperatura"])), "meio")}
@@ -657,14 +813,14 @@ def gerar_html(r: Resultado, resumo: list[str], caminho: Path, info_leitura: dic
 
     secoes.append(f"""
 <section id="motivos">
-  <h2>Motivos</h2>
+  <h2>Motivos.</h2>
   {graficos_motivos(r)}
   {cartao("Principais motivos por emoção e momento", "", tabela_html(t["motivos_emocao"]) + detalhes("Tabela completa de motivos", tabela_html(t["motivos"])))}
 </section>""")
 
     secoes.append(f"""
 <section id="pergunta">
-  <h2>Pergunta do dia</h2>
+  <h2>Pergunta do dia.</h2>
   {cartao("Resultados da pergunta do dia", "Feita na saída do dia. “Favorável” é “Sim”, exceto em “Sentiu-se sobrecarregado(a) hoje?”, onde favorável é “Não”.",
           grafico_pergunta_do_dia(r) + tabela_html(t["pergunta_dia"]))}
 </section>""")
@@ -672,20 +828,22 @@ def gerar_html(r: Resultado, resumo: list[str], caminho: Path, info_leitura: dic
     ignorados = info_leitura.get("arquivos_ignorados", [])
     lista_ignorados = ""
     if ignorados:
-        lista_ignorados = "<ul>" + "".join(f"<li>{_esc(Path(p).name)}: {_esc(motivo)}</li>" for p, motivo in ignorados) + "</ul>"
+        lista_ignorados = '<ul class="lst">' + "".join(
+            f"<li>{_esc(Path(p).name)}: {_esc(motivo)}</li>" for p, motivo in ignorados) + "</ul>"
     avisos = "".join(f"<li>{_esc(a)}</li>" for a in info_leitura.get("avisos", []))
     secoes.append(f"""
 <section id="notas">
-  <h2>Como ler este relatório</h2>
+  <h2>Como ler este relatório.</h2>
   <article class="cartao">
-    <ul class="achados">
-      <li><b>Índice de humor</b>: média das pontuações das emoções (de −3 a +2). Acima de zero, predominam emoções positivas.</li>
-      <li><b>Participação</b>: respostas ÷ (público esperado × dias úteis com coleta). Público esperado: {_esc(r.config.get('publico_esperado_por_quiosque', 40))} pessoas por ponto de coleta, por dia, em cada momento. Sábados, domingos e feriados não entram na taxa.</li>
-      <li><b>Variações</b>: como a pesquisa é anônima, não é possível acompanhar a mesma pessoa. Compara-se a média de cada momento, no mesmo ponto de coleta e no mesmo dia, usando só dias em que os dois momentos têm {m} ou mais respostas.</li>
-      <li><b>Anonimato</b>: recortes com menos de {m} respostas aparecem como “dados insuficientes”; categorias com 1 a {m - 1} respostas aparecem como “&lt;{m}”, sem contagem nem percentual, e ficam fora dos gráficos (ou juntas em “Outras”).</li>
-      <li><b>Arquivos lidos</b>: {len(info_leitura.get('arquivos_lidos', []))} arquivo(s) CSV, {inteiro(info_leitura.get('linhas_lidas', 0))} linha(s) lidas, {inteiro(info_leitura.get('duplicadas_removidas', 0))} resposta(s) repetida(s) consolidada(s) (mesmo response_id).</li>
-      {f'<li><b>Arquivos ignorados</b>: {lista_ignorados}</li>' if lista_ignorados else ''}
+    <ul class="lst">
+      <li><b>Índice de humor.</b> Média das pontuações das emoções (de −3 a +2). Acima de zero, predominam emoções positivas.</li>
+      <li><b>Participação.</b> Respostas ÷ (público esperado × dias úteis com coleta). Público esperado: {_esc(r.config.get('publico_esperado_por_quiosque', 40))} pessoas por ponto de coleta, por dia, em cada momento. Sábados, domingos e feriados não entram na taxa.</li>
+      <li><b>Variações.</b> Como a pesquisa é anônima, não é possível acompanhar a mesma pessoa. Compara-se a média de cada momento, no mesmo ponto de coleta e no mesmo dia, usando só dias em que os dois momentos têm {m} ou mais respostas.</li>
+      <li><b>Anonimato.</b> Recortes com menos de {m} respostas aparecem como “dados insuficientes”; categorias com 1 a {m - 1} respostas aparecem como “&lt;{m}”, sem contagem nem percentual, e ficam fora dos gráficos (ou juntas em “Outras”).</li>
+      <li><b>Arquivos lidos.</b> {len(info_leitura.get('arquivos_lidos', []))} arquivo(s) CSV, {inteiro(info_leitura.get('linhas_lidas', 0))} linha(s) lidas, {inteiro(info_leitura.get('duplicadas_removidas', 0))} resposta(s) repetida(s) consolidada(s) (mesmo response_id).</li>
+      {f'<li><b>Arquivos ignorados.</b> {lista_ignorados}</li>' if lista_ignorados else ''}
       {avisos}
+      <li><b>Uso interno.</b> Documento de uso interno da CIPA. Os dados são anônimos.</li>
     </ul>
   </article>
 </section>""")
@@ -697,34 +855,31 @@ def gerar_html(r: Resultado, resumo: list[str], caminho: Path, info_leitura: dic
                      ("motivos", "Motivos"), ("pergunta", "Pergunta do dia"), ("notas", "Como ler")]
     )
     pagina = f"""<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Relatório Termômetro Emocional</title>
-<style>{CSS}</style>
+<style>
+{_font_faces(raiz)}
+{CSS}</style>
 <script>{get_plotlyjs()}</script>
 </head>
 <body>
-<header class="topo"><div class="topo-interno">
+<header class="cab"><div class="cab-in">
   {_logo(raiz)}
-  <div>
-    <h1>Termômetro Emocional — CIPA Eurostec</h1>
-    <p>Relatório do período de {data_br(r.inicio)} a {data_br(r.fim)} · gerado em {agora.strftime('%d/%m/%Y às %H:%M')}</p>
-  </div>
+  <h1 class="cab-t">Termômetro Emocional: <b>{_esc(_periodo_titulo(r.inicio, r.fim))}</b></h1>
+  <p class="cab-apoio">CIPA Eurostec · gerado em {agora.strftime('%d/%m/%Y às %H:%M')}</p>
 </div></header>
 <nav class="sumario" aria-label="Seções"><ul>{navegacao}</ul></nav>
 <main>
 {''.join(secoes)}
 </main>
-<footer>Termômetro Emocional — CIPA Eurostec. Documento de uso interno da CIPA. Dados anônimos.</footer>
-<script>
-  // Reajusta os gráficos ao tamanho final da página (e ao abrir "Ver tabela").
-  window.addEventListener("load", function () {{ window.dispatchEvent(new Event("resize")); }});
-  document.querySelectorAll("details").forEach(function (d) {{
-    d.addEventListener("toggle", function () {{ window.dispatchEvent(new Event("resize")); }});
-  }});
-</script>
+<footer class="rod"><div class="rod-in">
+  <span>Eurostec | CIPA · Termômetro Emocional</span>
+  <span>Alta performance nos define.</span>
+</div></footer>
+<script>{SCRIPT_PAGINA}</script>
 </body>
 </html>
 """

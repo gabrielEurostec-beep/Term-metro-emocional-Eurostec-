@@ -11,7 +11,11 @@ a = Analysis(
     [str(RAIZ / "ferramentas" / "pyinstaller" / "entrada_relatorio.py")],
     pathex=[str(RAIZ)],
     # plotly.min.js é embutido no HTML para o relatório abrir sem internet.
-    datas=collect_data_files("plotly"),
+    # Fontes Google Sans (4 pesos reais) e logo azul oficial: embutidos no HTML (Eurostec System).
+    datas=collect_data_files("plotly") + [
+        (str(RAIZ / "quiosque" / "web" / "fontes"), "quiosque/web/fontes"),
+        (str(RAIZ / "assets" / "Eurostec-logo-azul.png"), "assets"),
+    ],
     hiddenimports=collect_submodules("plotly.validators") + ["quiosque.formato"],
     excludes=["tkinter", "PIL", "matplotlib", "IPython", "notebook", "pytest"],
     noarchive=False,
