@@ -1,0 +1,26 @@
+# Ambiente Python
+.venv/
+__pycache__/
+*.pyc
+build/
+*.egg-info/
+
+# Dados e estado gerados pelo quiosque (ficam só no computador)
+dados/
+estado/
+logs/
+exportacoes/
+config/config.json
+config/backups/
+
+# Relatórios e dados de teste
+relatorios/
+entrada_relatorio/
+dados_ficticios/
+
+# Executáveis gerados
+bin/
+dist/
+*.spec.bak
+
+node_modules/

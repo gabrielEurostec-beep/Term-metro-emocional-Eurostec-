@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Termômetro Emocional — CIPA Eurostec</title>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+  <!-- 1. Tela inicial (descanso) -->
+  <section id="tela-inicio" class="tela tela-azul" aria-label="Tela inicial">
+    <header class="topo">
+      <div class="logo-caixa"><img class="logo" src="/logo" alt="Eurostec" draggable="false"><span class="logo-texto">EUROSTEC</span></div>
+    </header>
+    <div class="inicio-centro">
+      <h1 id="inicio-titulo"></h1>
+      <p id="inicio-texto" class="inicio-texto"></p>
+      <div id="inicio-emojis" class="inicio-emojis" aria-hidden="true"></div>
+      <button id="botao-iniciar" class="botao-principal" type="button"></button>
+    </div>
+    <footer id="inicio-rodape" class="inicio-rodape"></footer>
+  </section>
+
+  <!-- 2. Escolha do momento (fora das janelas e fins de semana) -->
+  <section id="tela-momento" class="tela tela-clara" aria-label="Escolha do momento">
+    <header class="topo topo-claro">
+      <div class="logo-caixa pequena"><img class="logo" src="/logo" alt="Eurostec" draggable="false"><span class="logo-texto">EUROSTEC</span></div>
+    </header>
+    <h2 id="momento-titulo" class="titulo-tela"></h2>
+    <div id="momento-opcoes" class="grade-momentos"></div>
+    <div class="barra-tempo"><span></span></div>
+  </section>
+
+  <!-- 3. Toque 1: emoção -->
+  <section id="tela-emocoes" class="tela tela-clara" aria-label="Como você está?">
+    <header class="topo topo-claro">
+      <div class="logo-caixa pequena"><img class="logo" src="/logo" alt="Eurostec" draggable="false"><span class="logo-texto">EUROSTEC</span></div>
+    </header>
+    <h2 id="emocoes-titulo" class="titulo-tela"></h2>
+    <div id="emocoes-grade" class="grade-emocoes"></div>
+    <div class="rodape-acoes rodape-direita">
+      <button id="botao-trocar-momento" class="botao-discreto" type="button"></button>
+    </div>
+    <div class="barra-tempo"><span></span></div>
+  </section>
+
+  <!-- 4. Toque 2: motivo -->
+  <section id="tela-motivo" class="tela tela-clara" aria-label="Motivo">
+    <div class="centro-topo"><div id="motivo-emocao" class="chip-emocao"></div></div>
+    <h2 id="motivo-titulo" class="titulo-tela"></h2>
+    <div id="motivo-opcoes" class="grade-opcoes"></div>
+    <div class="rodape-acoes">
+      <button id="motivo-pular" class="botao-pular" type="button"></button>
+    </div>
+    <div class="barra-tempo"><span></span></div>
+  </section>
+
+  <!-- 5. Pergunta do dia -->
+  <section id="tela-pergunta" class="tela tela-clara" aria-label="Pergunta do dia">
+    <div class="centro-topo"><div id="pergunta-selo" class="selo"></div></div>
+    <h2 id="pergunta-texto" class="titulo-tela"></h2>
+    <div id="pergunta-opcoes" class="grade-sim-nao"></div>
+    <div class="rodape-acoes">
+      <button id="pergunta-pular" class="botao-pular" type="button"></button>
+    </div>
+    <div class="barra-tempo"><span></span></div>
+  </section>
+
+  <!-- 6. Agradecimento -->
+  <section id="tela-obrigado" class="tela tela-azul" aria-label="Obrigado">
+    <div class="obrigado-centro">
+      <div class="check" aria-hidden="true">
+        <svg viewBox="0 0 52 52"><path d="M14 27 l8 8 l16 -18" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2 id="obrigado-texto"></h2>
+      <p id="obrigado-acolhimento" class="acolhimento"></p>
+    </div>
+  </section>
+
+  <!-- 7. PIN da administração -->
+  <section id="tela-pin" class="tela tela-clara" aria-label="PIN da administração">
+    <div class="pin-centro">
+      <h2 class="titulo-tela">Administração</h2>
+      <p class="pin-instrucao">Digite o PIN</p>
+      <div id="pin-pontos" class="pin-pontos"></div>
+      <p id="pin-erro" class="pin-erro" role="alert"></p>
+      <div id="pin-teclado" class="pin-teclado"></div>
+      <button id="pin-cancelar" class="botao-discreto" type="button">Cancelar</button>
+    </div>
+  </section>
+
+  <!-- 8. Painel de administração -->
+  <section id="tela-admin" class="tela tela-admin" aria-label="Painel de administração">
+    <header class="admin-topo">
+      <div>
+        <h2>Administração do quiosque</h2>
+        <p id="admin-subtitulo"></p>
+      </div>
+      <button id="admin-sair" class="botao-admin principal" type="button">Sair da administração</button>
+    </header>
+
+    <div class="admin-grade">
+      <article class="cartao">
+        <h3>Respostas de hoje</h3>
+        <div id="admin-contagens" class="contagens"></div>
+        <p id="admin-momento" class="nota"></p>
+      </article>
+
+      <article class="cartao">
+        <h3>Planilha Google (sincronização)</h3>
+        <dl id="admin-sinc" class="dados"></dl>
+        <div class="botoes">
+          <button class="botao-admin" type="button" data-acao="testar_sincronizacao">Testar conexão</button>
+          <button class="botao-admin" type="button" data-acao="enviar_agora">Enviar pendentes agora</button>
+          <button class="botao-admin" type="button" data-acao="reenviar_tudo">Reenviar tudo</button>
+        </div>
+        <p id="admin-sinc-msg" class="mensagem"></p>
+      </article>
+
+      <article class="cartao">
+        <h3>Clima</h3>
+        <dl id="admin-clima" class="dados"></dl>
+        <div class="botoes">
+          <button class="botao-admin" type="button" data-acao="atualizar_clima">Atualizar agora</button>
+        </div>
+        <p id="admin-clima-msg" class="mensagem"></p>
+      </article>
+
+      <article class="cartao">
+        <h3>Exportar CSV (pendrive)</h3>
+        <p class="nota">Copia todos os arquivos de respostas deste quiosque para a pasta <b>TermometroEurostec</b> do pendrive.</p>
+        <div id="admin-pendrives" class="botoes"></div>
+        <p id="admin-csv" class="nota"></p>
+        <p id="admin-exportar-msg" class="mensagem"></p>
+      </article>
+
+      <article class="cartao largo">
+        <h3>Configuração</h3>
+        <form id="admin-form" class="formulario" autocomplete="off"></form>
+        <div class="botoes">
+          <button id="admin-salvar" class="botao-admin principal" type="button">Salvar configuração</button>
+        </div>
+        <div id="admin-config-msg" class="mensagem"></div>
+        <details class="avancado">
+          <summary>Editor avançado (todas as opções: textos, emoções, motivos, perguntas...)</summary>
+          <p class="nota">Edite com cuidado. Antes de salvar, o sistema confere tudo e guarda uma cópia da configuração anterior em config/backups.</p>
+          <textarea id="admin-json" spellcheck="false"></textarea>
+          <div class="botoes">
+            <button id="admin-salvar-json" class="botao-admin" type="button">Conferir e salvar</button>
+            <button id="admin-restaurar-json" class="botao-admin" type="button">Desfazer alterações no texto</button>
+          </div>
+        </details>
+      </article>
+
+      <article class="cartao">
+        <h3>Sistema</h3>
+        <dl id="admin-sistema" class="dados"></dl>
+        <div class="botoes">
+          <button id="admin-recarregar" class="botao-admin" type="button">Recarregar tela</button>
+          <button id="admin-encerrar" class="botao-admin perigo" type="button">Fechar o quiosque</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Avisos -->
+  <div id="aviso" class="aviso" role="status"></div>
+  <div id="sem-servidor" class="sobreposicao" hidden>
+    <div>
+      <div class="girando" aria-hidden="true"></div>
+      <h2>O Termômetro Emocional está iniciando…</h2>
+      <p>Se esta mensagem não sumir em 1 minuto, chame a CIPA.</p>
+    </div>
+  </div>
+
+  <!-- Canto escondido da administração (toque longo de 3 s) -->
+  <div id="canto-admin" aria-hidden="true"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

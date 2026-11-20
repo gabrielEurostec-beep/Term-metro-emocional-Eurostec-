@@ -1,0 +1,36 @@
+{
+  "_leia_me": "Configuração do relatório quinzenal. Veja o README, seção 'Relatório'.",
+  "publico_esperado_por_quiosque": 40,
+  "publico_por_quiosque": {},
+  "funcionarios_total": 150,
+  "_feriados_leia_me": "Feriados nacionais (inclusive Sexta-feira Santa) já são descontados automaticamente da taxa de participação. Coloque aqui feriados municipais, Carnaval, Corpus Christi ou dias de folga coletiva, no formato AAAA-MM-DD.",
+  "feriados_extras": [],
+  "minimo_respostas_por_recorte": 5,
+  "pasta_entrada": "entrada_relatorio",
+  "pasta_saida": "relatorios",
+  "ordem_emocoes": [
+    "Feliz",
+    "Animado",
+    "Neutro",
+    "Cansado",
+    "Preocupado",
+    "Triste",
+    "Bravo",
+    "Furioso"
+  ],
+  "cores_emocoes": {
+    "Feliz": "#23863a",
+    "Animado": "#0b78b8",
+    "Neutro": "#9aa3ad",
+    "Cansado": "#7a5fb0",
+    "Preocupado": "#c98a00",
+    "Triste": "#2f62c4",
+    "Bravo": "#e8650f",
+    "Furioso": "#b02525"
+  },
+  "perguntas_invertidas": [
+    "Sentiu-se sobrecarregado(a) hoje?"
+  ],
+  "abrir_ao_terminar": true,
+  "_cores_leia_me": "Cores das emoções nos gráficos do relatório. Foram testadas para serem distinguíveis lado a lado, inclusive por quem tem daltonismo."
+}

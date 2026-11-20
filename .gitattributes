@@ -1,0 +1,6 @@
+# Padrão: texto com quebra de linha normalizada
+* text=auto
+# Arquivos .bat ficam SEMPRE com quebra de linha do Windows (CRLF), sem conversão
+*.bat -text
+*.cmd -text
+*.png binary

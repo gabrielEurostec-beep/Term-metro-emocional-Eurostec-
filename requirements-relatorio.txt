@@ -1,0 +1,5 @@
+# Bibliotecas do relatório quinzenal (instaladas pelo instalar.bat, opção "PC da CIPA").
+# O quiosque NÃO precisa delas: o servidor do quiosque usa só a biblioteca padrão do Python.
+pandas>=2.2,<4
+openpyxl>=3.1,<4
+plotly>=5.19,<8

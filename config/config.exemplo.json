@@ -1,0 +1,261 @@
+{
+  "_leia_me": "Configuração deste quiosque. Cada computador tem a sua. Veja o README, seção 'Configuração do quiosque'. Depois de alterar, reinicie o quiosque ou salve pela área de administração.",
+  "kiosk_id": "Q01",
+  "kiosk_local": "Portaria",
+  "pin_admin": "2468",
+  "porta": 8080,
+  "logo": "assets/logo.png",
+  "fuso_horario": "America/Sao_Paulo",
+  "expediente": {
+    "dias": [
+      "segunda",
+      "terça",
+      "quarta",
+      "quinta",
+      "sexta"
+    ],
+    "periodos": [
+      {
+        "inicio": "07:30",
+        "fim": "11:50"
+      },
+      {
+        "inicio": "13:00",
+        "fim": "17:04"
+      }
+    ]
+  },
+  "feriados": [],
+  "momentos": {
+    "chegada": {
+      "nome": "Chegada",
+      "icone": "🌅",
+      "inicio": "05:00",
+      "fim": "10:00",
+      "pergunta": "Como você está chegando hoje?",
+      "perguntar_motivo": true
+    },
+    "saida_almoco": {
+      "nome": "Saída para o almoço",
+      "icone": "🍽️",
+      "inicio": "11:30",
+      "fim": "12:20",
+      "pergunta": "Como você está saindo para o almoço?",
+      "perguntar_motivo": false
+    },
+    "volta_almoco": {
+      "nome": "Volta do almoço",
+      "icone": "💼",
+      "inicio": "12:20",
+      "fim": "14:00",
+      "pergunta": "Como você está voltando do almoço?",
+      "perguntar_motivo": false
+    },
+    "saida_final": {
+      "nome": "Saída do dia",
+      "icone": "🏠",
+      "inicio": "16:30",
+      "fim": "23:59",
+      "pergunta": "Como você está saindo hoje?",
+      "perguntar_motivo": true
+    }
+  },
+  "emocoes": [
+    {
+      "nome": "Feliz",
+      "emoji": "😄",
+      "cor": "#23863a",
+      "cor_texto": "#ffffff",
+      "pontuacao": 2,
+      "valencia": "positiva",
+      "acolhimento": false
+    },
+    {
+      "nome": "Animado",
+      "emoji": "🤩",
+      "cor": "#5c9e0f",
+      "cor_texto": "#ffffff",
+      "pontuacao": 2,
+      "valencia": "positiva",
+      "acolhimento": false
+    },
+    {
+      "nome": "Neutro",
+      "emoji": "😐",
+      "cor": "#6b7785",
+      "cor_texto": "#ffffff",
+      "pontuacao": 0,
+      "valencia": "neutra",
+      "acolhimento": false
+    },
+    {
+      "nome": "Cansado",
+      "emoji": "😩",
+      "cor": "#7a5fb0",
+      "cor_texto": "#ffffff",
+      "pontuacao": -1,
+      "valencia": "negativa",
+      "acolhimento": false
+    },
+    {
+      "nome": "Preocupado",
+      "emoji": "😟",
+      "cor": "#c98a00",
+      "cor_texto": "#1f1f1f",
+      "pontuacao": -1,
+      "valencia": "negativa",
+      "acolhimento": false
+    },
+    {
+      "nome": "Triste",
+      "emoji": "😢",
+      "cor": "#2f62c4",
+      "cor_texto": "#ffffff",
+      "pontuacao": -2,
+      "valencia": "negativa",
+      "acolhimento": true
+    },
+    {
+      "nome": "Bravo",
+      "emoji": "😠",
+      "cor": "#d9480f",
+      "cor_texto": "#ffffff",
+      "pontuacao": -2,
+      "valencia": "negativa",
+      "acolhimento": true
+    },
+    {
+      "nome": "Furioso",
+      "emoji": "😡",
+      "cor": "#b02525",
+      "cor_texto": "#ffffff",
+      "pontuacao": -3,
+      "valencia": "negativa",
+      "acolhimento": true
+    }
+  ],
+  "motivos": {
+    "chegada": {
+      "negativo": {
+        "titulo": "O que mais pesou?",
+        "opcoes": [
+          "Sono/cansaço",
+          "Trânsito/deslocamento",
+          "Família/vida pessoal",
+          "Saúde/dor",
+          "Preocupação com o trabalho",
+          "Financeiro",
+          "Prefiro não dizer"
+        ]
+      },
+      "positivo": {
+        "titulo": "O que mais contribuiu?",
+        "opcoes": [
+          "Descansei bem",
+          "Vida pessoal/família",
+          "Animado com o dia de trabalho",
+          "Clima/dia bonito",
+          "Prefiro não dizer"
+        ]
+      }
+    },
+    "saida_final": {
+      "negativo": {
+        "titulo": "O que mais pesou?",
+        "opcoes": [
+          "Volume/ritmo de trabalho",
+          "Relação com colegas",
+          "Liderança/cobrança",
+          "Falta de material/equipamento",
+          "Cliente/pressão externa",
+          "Cansaço físico",
+          "Situação de risco/segurança",
+          "Prefiro não dizer"
+        ]
+      },
+      "positivo": {
+        "titulo": "O que mais contribuiu?",
+        "opcoes": [
+          "Dia produtivo",
+          "Equipe/colegas",
+          "Reconhecimento",
+          "Resolvi um problema",
+          "Prefiro não dizer"
+        ]
+      }
+    }
+  },
+  "pergunta_do_dia": {
+    "ativa": true,
+    "momentos": [
+      "saida_final"
+    ],
+    "mostrar_para_neutro": true,
+    "opcoes": [
+      "Sim",
+      "Mais ou menos",
+      "Não"
+    ],
+    "perguntas": [
+      {
+        "texto": "Conseguiu fazer suas pausas hoje?",
+        "invertida": false
+      },
+      {
+        "texto": "Você se sentiu seguro(a) no trabalho hoje?",
+        "invertida": false
+      },
+      {
+        "texto": "Você se sentiu respeitado(a) hoje?",
+        "invertida": false
+      },
+      {
+        "texto": "Teve as informações e ferramentas de que precisava?",
+        "invertida": false
+      },
+      {
+        "texto": "Sentiu-se sobrecarregado(a) hoje?",
+        "invertida": true
+      }
+    ]
+  },
+  "textos": {
+    "titulo": "Termômetro Emocional — CIPA Eurostec",
+    "texto_inicial": "A CIPA quer entender como nossa equipe está se sentindo para cuidar melhor de todos. É **ANÔNIMO**: não registramos nome, foto nem crachá. É **RÁPIDO**: leva menos de 5 segundos. Contamos com a sua participação!",
+    "botao_iniciar": "Toque para começar",
+    "rodape": "Hoje {x} pessoas já participaram neste ponto.",
+    "rodape_um": "Hoje 1 pessoa já participou neste ponto.",
+    "rodape_zero": "Seja a primeira pessoa a participar hoje neste ponto!",
+    "titulo_escolher_momento": "Em qual momento do dia você está?",
+    "trocar_momento": "trocar momento",
+    "pular": "Pular",
+    "titulo_pergunta_do_dia": "Pergunta do dia",
+    "agradecimento": "Obrigado! Hoje {x} pessoas já registraram como estão.",
+    "agradecimento_um": "Obrigado! Hoje 1 pessoa já registrou como está.",
+    "acolhimento": "Obrigado por compartilhar. Se quiser conversar, a CIPA e o RH estão à disposição.",
+    "erro_registro": "Não foi possível registrar agora. Por favor, tente de novo."
+  },
+  "tempos": {
+    "inatividade_s": 6,
+    "agradecimento_s": 1.5,
+    "acolhimento_s": 4,
+    "bloqueio_novo_registro_s": 2,
+    "trava_entre_telas_s": 0.5,
+    "toque_longo_admin_s": 3,
+    "admin_inatividade_s": 120
+  },
+  "clima": {
+    "ativo": true,
+    "latitude": -29.168,
+    "longitude": -51.179,
+    "intervalo_min": 15,
+    "validade_max_min": 60
+  },
+  "sincronizacao": {
+    "url": "",
+    "token": "",
+    "atraso_envio_s": 8,
+    "tamanho_lote": 50,
+    "timeout_s": 30
+  }
+}

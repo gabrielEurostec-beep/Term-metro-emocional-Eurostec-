@@ -1,0 +1,111 @@
+# Gera os executáveis do Windows (sem precisar de Python nos quiosques),
+# roda os testes automáticos num Windows real e monta o pacote para download.
+# O pacote fica em: Actions > (execução mais recente) > Artifacts > TermometroEmocional-Windows
+name: Gerar executáveis Windows
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependências
+        run: python -m pip install --disable-pip-version-check -r requirements-relatorio.txt pyinstaller
+
+      - name: Testes automáticos (no Windows)
+        run: python -m unittest discover -s tests -t . -v
+
+      - name: Gerar executáveis
+        run: |
+          python -m PyInstaller --noconfirm --clean --distpath bin --workpath build ferramentas/pyinstaller/quiosque.spec
+          python -m PyInstaller --noconfirm --clean --distpath bin --workpath build ferramentas/pyinstaller/relatorio.spec
+
+      - name: Montar pacote
+        shell: pwsh
+        run: |
+          $destino = Join-Path $env:RUNNER_TEMP "pacote\TermometroEmocional"
+          New-Item -ItemType Directory -Force $destino | Out-Null
+          $itens = @('README.md', 'instalar.bat', 'iniciar_quiosque.bat', 'configurar_inicio_automatico.bat',
+                     'remover_inicio_automatico.bat', 'gerar_relatorio.bat', 'gerar_dados_ficticios.bat',
+                     'rodar_testes.bat', 'gerar_executaveis.bat', 'requirements-relatorio.txt',
+                     'assets', 'apps_script', 'config', 'quiosque', 'relatorio', 'ferramentas', 'tests', 'bin')
+          foreach ($i in $itens) { Copy-Item -Recurse -Force $i $destino }
+          Get-ChildItem -Path $destino -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
+          Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $destino 'config\config.json')
+          "PACOTE=$destino" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Teste rápido do TermometroQuiosque.exe (como num quiosque)
+        shell: pwsh
+        run: |
+          $teste = Join-Path $env:RUNNER_TEMP "teste-quiosque"
+          Copy-Item -Recurse $env:PACOTE $teste
+          $exe = Join-Path $teste "bin\TermometroQuiosque.exe"
+          $proc = Start-Process -FilePath $exe -ArgumentList '--porta', '8080' -WorkingDirectory $env:RUNNER_TEMP -PassThru -WindowStyle Hidden
+          $ok = $false
+          for ($i = 0; $i -lt 60; $i++) {
+            try { Invoke-RestMethod http://127.0.0.1:8080/api/saude -TimeoutSec 2 | Out-Null; $ok = $true; break } catch { Start-Sleep 1 }
+          }
+          if (-not $ok) { Get-Content (Join-Path $teste 'logs\quiosque.log') -ErrorAction SilentlyContinue; throw "O servidor não respondeu" }
+          $estado = Invoke-RestMethod http://127.0.0.1:8080/api/estado
+          $corpo = '{"momento":"saida_final","momento_automatico":false,"emocao":"Feliz"}'
+          $r = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8080/api/respostas -ContentType 'application/json' -Body $corpo
+          Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8080/api/respostas/$($r.response_id)" -ContentType 'application/json' -Body '{"motivo":"Dia produtivo"}' | Out-Null
+          $index = Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8080/
+          $js = Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8080/app.js
+          if ($js.Headers['Content-Type'] -notlike 'application/javascript*') { throw "Tipo errado do app.js: $($js.Headers['Content-Type'])" }
+          Stop-Process -Id $proc.Id -Force
+          $csv = Get-ChildItem (Join-Path $teste 'dados') -Filter 'respostas_*.csv'
+          if ($csv.Count -ne 1) { throw "CSV não encontrado em dados\" }
+          $linhas = Get-Content $csv.FullName -Encoding utf8
+          Write-Host ($linhas -join "`n")
+          if ($linhas.Count -ne 2 -or $linhas[1] -notlike '*Dia produtivo*') { throw "CSV com conteúdo inesperado" }
+          Write-Host "Quiosque OK. Momento automático agora: $($estado.momento_atual). Pendrives: (testado na API admin pelos testes)"
+
+      - name: Teste rápido do TermometroRelatorio.exe
+        shell: pwsh
+        run: |
+          $dados = Join-Path $env:RUNNER_TEMP "dados_ficticios"
+          $saida = Join-Path $env:RUNNER_TEMP "relatorio_teste"
+          python ferramentas/gerar_dados_ficticios.py --saida $dados --com-planilha
+          & (Join-Path $env:PACOTE "bin\TermometroRelatorio.exe") --entrada $dados --saida $saida --nao-abrir
+          if ($LASTEXITCODE -ne 0) { throw "O relatório falhou" }
+          $html = Get-ChildItem $saida -Filter 'relatorio_*.html'
+          $xlsx = Get-ChildItem $saida -Filter 'relatorio_*.xlsx'
+          if (-not $html -or -not $xlsx) { throw "Relatório não gerado" }
+          Write-Host "Relatório OK: $($html.Name) ($([math]::Round($html.Length/1MB,1)) MB) e $($xlsx.Name)"
+
+      - name: Publicar pacote para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: TermometroEmocional-Windows
+          path: ${{ env.PACOTE }}
+          retention-days: 90
+
+      - name: Compactar (para versões marcadas)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: Compress-Archive -Path $env:PACOTE -DestinationPath TermometroEmocional-Windows.zip
+
+      - name: Criar versão (release) com o .zip
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: TermometroEmocional-Windows.zip
