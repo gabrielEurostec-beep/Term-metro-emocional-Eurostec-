@@ -37,7 +37,13 @@ def pasta_base() -> Path:
 
 
 def pasta_web() -> Path:
-    """Pasta com o frontend (index.html, estilo.css, app.js)."""
+    """Pasta com o frontend (index.html, estilo.css, app.js).
+
+    A variável TERMOMETRO_WEB tem prioridade (usada pelo app Android, que copia
+    as telas para a memória interna do tablet).
+    """
+    if os.environ.get("TERMOMETRO_WEB"):
+        return Path(os.environ["TERMOMETRO_WEB"]).resolve()
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         return Path(sys._MEIPASS) / "quiosque" / "web"
     return Path(__file__).resolve().parent / "web"

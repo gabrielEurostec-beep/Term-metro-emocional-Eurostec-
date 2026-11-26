@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone provisório: as duas barras "//" da marca sobre o azul. Trocar pelo ícone oficial, se houver. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#0446A4" android:pathData="M0,0h108v108h-108z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M30,24 L42,24 L30,84 L18,84 Z" />
+    <path android:fillColor="#00AEEF" android:pathData="M62,24 L74,24 L62,84 L50,84 Z" />
+</vector>

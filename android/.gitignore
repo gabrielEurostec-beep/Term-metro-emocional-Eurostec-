@@ -1,0 +1,14 @@
+# Gerados no build a partir do código Python e das telas do repositório.
+# Não editar estas pastas: alterações devem ser feitas em quiosque/ e assets/.
+app/src/main/python/quiosque/
+app/src/main/assets/termometro/
+
+# Build e configuração local
+build/
+.gradle/
+local.properties
+app/build/
+
+# Chaves de assinatura nunca vão para o repositório
+*.jks
+*.keystore

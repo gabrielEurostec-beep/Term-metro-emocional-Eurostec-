@@ -455,6 +455,16 @@
 
       var caixa = $('admin-pendrives');
       caixa.innerHTML = '';
+      if (ehAndroid()) {
+        var baixar = el('button', 'botao-admin principal', 'Copiar respostas para a pasta Download');
+        baixar.type = 'button';
+        baixar.addEventListener('click', exportarAndroid);
+        caixa.appendChild(baixar);
+        caixa.appendChild(el('p', 'nota', 'No tablet, os arquivos vão para Download/TermometroEurostec. Abra o app "Arquivos" para copiá-los a um pendrive (use um adaptador USB, se o tablet precisar).'));
+        $('admin-csv').innerHTML = escapar(s.csv.arquivos + ' arquivo(s) de respostas neste tablet') +
+          (s.csv.erro ? '<br>' + selo('erro', 'Atenção') + ' ' + escapar(s.csv.erro) : '');
+        return;
+      }
       (s.pendrives || []).forEach(function (p) {
         var b = el('button', 'botao-admin principal', 'Exportar para ' + p.letra + ' (' + p.nome + ')');
         b.type = 'button';
@@ -504,6 +514,23 @@
       tratarErroAdmin(erro);
       mensagem(alvo, (erro.dados && (erro.dados.mensagem || erro.dados.erro)) || erro.message, false);
     }).finally(function () { botao.disabled = false; carregarStatusAdmin(); });
+  }
+
+  /* Ponte nativa: só existe dentro do app Android (ver android/ no projeto). */
+  function ehAndroid() {
+    return !!(window.AndroidApp && typeof window.AndroidApp.exportarParaDownloads === 'function');
+  }
+
+  function exportarAndroid() {
+    mensagem('admin-exportar-msg', 'Copiando…', true);
+    var resultado;
+    try { resultado = JSON.parse(window.AndroidApp.exportarParaDownloads()); }
+    catch (e) { mensagem('admin-exportar-msg', 'Não foi possível copiar os arquivos. Reinicie o aplicativo e tente de novo.', false); return; }
+    if (resultado.ok) {
+      mensagem('admin-exportar-msg', resultado.copiados + ' arquivo(s) copiado(s) para:\n' + resultado.pasta, true);
+    } else {
+      mensagem('admin-exportar-msg', resultado.erro || 'Não foi possível copiar os arquivos.', false);
+    }
   }
 
   function exportar(destino) {
@@ -635,6 +662,11 @@
   }
 
   function encerrarQuiosque() {
+    if (ehAndroid()) {
+      if (!confirm('Fechar o Termômetro e voltar para a tela inicial do tablet? Para abrir de novo, toque no ícone do aplicativo.')) return;
+      try { window.AndroidApp.sair(); } catch (e) { /* ignorado: o app já está fechando */ }
+      return;
+    }
     if (!confirm('Fechar o quiosque e voltar para o Windows? Para abrir de novo, use "iniciar_quiosque.bat" ou reinicie o computador.')) return;
     post('/api/admin/encerrar', {}).finally(function () {
       adminToken = null;

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Termômetro Emocional</string>
+    <string name="iniciando">Iniciando o Termômetro Emocional…</string>
+    <string name="erro_iniciar">Não foi possível iniciar o Termômetro. Reinicie o tablet. Se o problema continuar, chame a TI.</string>
+</resources>

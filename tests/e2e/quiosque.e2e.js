@@ -103,7 +103,9 @@ async function cenario(nome, fn) {
 
 (async () => {
   const navegador = await chromium.launch();
-  const contexto = await navegador.newContext({ viewport: { width: 1920, height: 1080 }, hasTouch: true, deviceScaleFactor: 1, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
+  // VIEWPORT=1280x800 roda o mesmo teste no tamanho de um tablet de 10 polegadas.
+  const [largura, altura] = (process.env.VIEWPORT || '1920x1080').split('x').map(Number);
+  const contexto = await navegador.newContext({ viewport: { width: largura, height: altura }, hasTouch: true, deviceScaleFactor: 1, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
 
   async function abrir(dataHora, configExtra) {
     const srv = await iniciarServidor(dataHora, configExtra);
@@ -335,7 +337,7 @@ async function cenario(nome, fn) {
   await cenario('Administração: toque curto no canto inicia o fluxo; toque longo de 3 s + PIN abre o painel', async () => {
     const { page, fechar } = await abrir('2026-11-18T10:30:00');
     const cdp = await page.context().newCDPSession(page);
-    const ponto = { x: 1880, y: 40 };
+    const ponto = { x: largura - 40, y: 40 };
     // toque curto no canto → começa o fluxo normalmente
     await page.touchscreen.tap(ponto.x, ponto.y);
     await aguardarTela(page, 'tela-momento');
@@ -376,6 +378,40 @@ async function cenario(nome, fn) {
     await page.locator('#admin-sair').tap();
     await aguardarTela(page, 'tela-inicio');
     await fechar();
+  });
+
+  await cenario('Android: admin usa a ponte nativa (copiar para Download e fechar o app)', async () => {
+    const srv = await iniciarServidor('2026-11-18T10:30:00');
+    const page = await contexto.newPage();
+    await page.addInitScript(() => {
+      window.__chamadas = [];
+      window.AndroidApp = {
+        exportarParaDownloads: () => { window.__chamadas.push('exportar'); return JSON.stringify({ ok: true, copiados: 2, pasta: 'Download/TermometroEurostec' }); },
+        sair: () => { window.__chamadas.push('sair'); },
+        versao: () => '1.0.0'
+      };
+    });
+    page.on('dialog', (d) => d.accept());
+    await page.goto(srv.url);
+    await aguardarTela(page, 'tela-inicio');
+    // toque longo de 3 s no canto superior direito abre o PIN
+    const cdp = await page.context().newCDPSession(page);
+    const ponto = { x: largura - 40, y: 40 };
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [ponto] });
+    await espera(3200);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await page.waitForFunction(() => window.__termometro.tela() === 'tela-pin');
+    for (const d of ['2', '4', '6', '8', 'OK']) await page.locator('#pin-teclado button', { hasText: new RegExp('^' + d + '$') }).tap();
+    await page.waitForSelector('#admin-pendrives button');
+    await page.locator('#admin-pendrives button', { hasText: 'Copiar respostas para a pasta Download' }).click();
+    await page.waitForSelector('#admin-exportar-msg:has-text("2 arquivo(s) copiado(s)")');
+    assert.match(await page.textContent('#admin-exportar-msg'), /Download\/TermometroEurostec/);
+    await page.locator('#admin-encerrar').click();
+    await espera(300);
+    const chamadas = await page.evaluate(() => window.__chamadas);
+    assert.deepEqual(chamadas, ['exportar', 'sair'], 'usou a ponte nativa, sem o caminho do Windows');
+    await page.close();
+    srv.parar();
   });
 
   await contexto.close();

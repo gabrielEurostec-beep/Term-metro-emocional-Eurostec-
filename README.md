@@ -437,3 +437,63 @@ TermometroEmocional\
 ```
 
 **Backup:** a pasta `dados\` de cada quiosque é a cópia principal das respostas. A planilha central e as exportações para pendrive são as cópias de segurança.
+
+---
+
+## 16. Tablet Android (APK)
+
+O Termômetro também funciona em **tablets Android 10 ou mais novos**. É o mesmo programa: as telas, as regras, o anonimato e a planilha são iguais. Muda apenas o jeito de instalar e de exportar.
+
+### Instalar o APK
+
+1. Baixe o arquivo **TermometroEmocional-1.0.0.apk** (no GitHub: *Actions → Gerar APK Android → execução mais recente → Artifacts → TermometroEmocional-APK*), ou receba o arquivo pela TI.
+2. No tablet, abra o arquivo com o app **Arquivos** e toque em **Instalar**.
+3. Se o tablet pedir, permita **instalar apps desconhecidos** para o app Arquivos (*Configurações → Apps → Acesso especial → Instalar apps desconhecidos*). Depois, desative essa permissão.
+4. Abra o **Termômetro Emocional**.
+
+> APK de **teste** (gerado sem chave da empresa): serve para experimentar, mas não é o ideal para os pontos de coleta. Veja "Chave de publicação" abaixo.
+
+### Primeira configuração (uma vez por tablet)
+
+1. Abra o Termômetro e toque no **canto superior direito** da tela inicial por **3 segundos**.
+2. Digite o **PIN** (o padrão é **2468**; troque em *Configuração*, pois o PIN padrão é conhecido).
+3. Em **Configuração**, preencha o **código do quiosque** (ex.: Q01) e o **local** (ex.: Portaria).
+4. Em **Planilha Google**, cole a URL e o token e toque em **Testar conexão** (veja a seção 7).
+5. Toque em **Salvar configuração**.
+
+### Deixar o tablet dedicado ao quiosque
+
+- **Tela sempre ligada:** o Termômetro já mantém a tela acesa. Para o tablet não bloquear sozinho, use *Configurações → Tela → Tela de bloqueio/Suspensão → Nunca*, e ative *Opções do desenvolvedor → Permanecer ativo* (com o carregador). Se não aparecer, peça à TI.
+- **Fixar o aplicativo:** na primeira abertura, o Android pergunta se você quer **fixar a tela**. Confirme. Assim, a pessoa não sai do Termômetro por acidente. Para sair, use a administração (**Fechar o quiosque**).
+- **Abrir sozinho:** em *Configurações → Apps → Apps padrão → Aplicativo inicial*, escolha o **Termômetro Emocional**. Ao ligar, o tablet abre direto nele.
+- **Bateria:** em *Configurações → Bateria*, deixe o Termômetro **sem restrição** (sem "otimização"), para o servidor não ser encerrado.
+- **Atualizações automáticas e reinícios:** evite horários de coleta para atualizações do sistema.
+
+### Copiar as respostas (plano B, como o pendrive)
+
+Na administração, toque em **Copiar respostas para a pasta Download**. Os arquivos ficam em **Download/TermometroEurostec**, que aparece no app **Arquivos**.
+
+Para levar a um pendrive, conecte um adaptador USB (OTG) no tablet, abra o app **Arquivos**, copie a pasta **TermometroEurostec** e cole no pendrive. O tablet pode precisar de um adaptador USB-C ou micro-USB para USB.
+
+### Atualizar o aplicativo sem perder dados
+
+Instale o APK novo **por cima** do anterior. As respostas, a configuração e os logs ficam guardados no tablet e não são apagados. Isso só funciona se o APK novo tiver a **mesma assinatura** do anterior, por isso a chave de publicação é importante.
+
+### Chave de publicação (recomendado antes de instalar nos pontos)
+
+1. Crie uma chave **uma única vez** (num computador com Java, use o comando `keytool`):
+   `keytool -genkeypair -v -keystore termometro.jks -alias termometro -keyalg RSA -keysize 2048 -validity 10000`
+   Guarde o arquivo `termometro.jks` e as senhas em lugar seguro (não envie por e-mail nem coloque no repositório).
+2. No GitHub, em *Settings → Secrets and variables → Actions*, crie os quatro secrets:
+   - `TERMOMETRO_KEYSTORE_BASE64`: o arquivo `.jks` convertido para base64 (no Linux ou Mac: `base64 termometro.jks`; no Windows, o PowerShell tem `[Convert]::ToBase64String`);
+   - `TERMOMETRO_KEYSTORE_SENHA` e `TERMOMETRO_CHAVE_SENHA`: as senhas que você definiu;
+   - `TERMOMETRO_CHAVE_ALIAS`: `termometro`.
+3. Rode de novo o *Gerar APK Android*. O APK gerado passa a ser o de publicação.
+
+**Não perca a chave.** Sem ela, não é possível atualizar os tablets sem apagar as respostas.
+
+### Limitações desta versão
+
+- O aplicativo foi preparado e compilado, mas **precisa ser testado num tablet real** antes de ir para os pontos: toque, fixação da tela, abertura automática e exportação para Download.
+- A fixação da tela pede confirmação. O bloqueio total, sem confirmação e sem possibilidade de sair, exige o tablet gerenciado por MDM (a TI pode configurar).
+- A cópia para pendrive é feita pelo app Arquivos, não diretamente.
