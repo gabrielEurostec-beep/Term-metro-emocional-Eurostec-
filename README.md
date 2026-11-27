@@ -91,7 +91,7 @@ O início faz parte da janela e o fim não. Por exemplo, 12:20 já conta como "V
 
 1. **Copie a pasta** `TermometroEmocional` para o computador do quiosque, por exemplo em `C:\TermometroEmocional`. Evite a Área de Trabalho e pastas sincronizadas com OneDrive.
 2. Dê **dois cliques em `instalar.bat`** e escolha **1 (Quiosque)**. Ele vai perguntar:
-   - **Código do quiosque**, por exemplo `Q01`, `Q02`, `Q03`. Use um código diferente em cada ponto.
+   - **Código do quiosque**: `Q01` e `Q02`, um código diferente em cada tablet.
    - **Local**, por exemplo `Portaria`, `Produção` ou `Refeitório`.
    - **PIN da administração**, de 4 a 8 números.
    - Se quer que o quiosque **abra sozinho quando o Windows ligar**. Recomendado: **S**.
@@ -134,7 +134,7 @@ Se preferir editar o arquivo à mão, use o Bloco de Notas, salve e reinicie o q
 | `momentos.<momento>.perguntar_motivo` | Liga/desliga o motivo naquele momento | chegada e saída ligados |
 | `emocoes` | Lista de emoções: nome, emoji, cor, cor do texto, pontuação, valência e se mostra a mensagem acolhedora | 8 emoções |
 | `motivos` | Listas de motivos (positivo/negativo) da chegada e da saída | listas da especificação |
-| `setores` | Setores deste quiosque, separados por ponto e vírgula no formulário (ex.: `Produção; Qualidade; Segurança`). Vazio = sem tela de setor | vazio |
+| `setores` | Setores deste quiosque, separados por ponto e vírgula no formulário (Q01: `Administrativo; Assistência técnica; Comercial`. Q02: `Produção; Qualidade; Segurança`). Vazio = sem tela de setor | vazio |
 | `setor_momentos` | Momentos em que a tela de setor aparece (sempre, sem sorteio) | chegada e saída do dia |
 | `pergunta_do_dia.ativa` | Liga/desliga a pergunta do dia | ligada |
 | `pergunta_do_dia.perguntas` | Perguntas em rodízio (uma por dia, igual em todos os quiosques) | 5 perguntas |
