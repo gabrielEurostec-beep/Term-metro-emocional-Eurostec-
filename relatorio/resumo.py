@@ -137,6 +137,18 @@ def gerar_resumo(r: Resultado) -> list[str]:
             f"e {NOME_DIA_LONGO[melhor]} o melhor ({_indice(por_dia[melhor])})."
         )
 
+    # 6b. Setor de maior e de menor humor (só grupos setor × ponto com pelo menos `minimo` respostas)
+    setores = [s for s in r.brutos["humor_setor"] if s["valido"]]
+    if len(setores) >= 2:
+        melhor = max(setores, key=lambda s: s["media"])
+        pior = min(setores, key=lambda s: s["media"])
+        if round(melhor["media"], 2) != round(pior["media"], 2):
+            frases.append(
+                f"Entre os setores, o humor é melhor em {melhor['setor']} ({melhor['kiosk']}), "
+                f"com índice {_indice(melhor['media'])}, e pior em {pior['setor']} ({pior['kiosk']}), "
+                f"com índice {_indice(pior['media'])}."
+            )
+
     # 7. Clima
     clima = r.graficos["clima_condicao"]
     valores = dict(zip(clima["rotulos"], clima["valores"]))

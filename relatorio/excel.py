@@ -75,6 +75,7 @@ ABAS = [
     ("Variações por ponto", "variacoes_quiosque"),
     ("Clima - condição", "clima_condicao"),
     ("Clima - temperatura", "clima_temperatura"),
+    ("Setores", "humor_setor"),
     ("Motivos", "motivos"),
     ("Motivos por emoção", "motivos_emocao"),
     ("Pergunta do dia", "pergunta_dia"),

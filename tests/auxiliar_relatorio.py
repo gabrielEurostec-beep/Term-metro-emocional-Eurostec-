@@ -19,7 +19,8 @@ VALENCIA = {"Feliz": "positiva", "Animado": "positiva", "Neutro": "neutra"}
 
 def linha(momento: str, emocao: str, data: date, kiosk: str = "Q01", hora: str = "07:30:00",
           motivo: str = "", pergunta: str = "", resposta: str = "", temperatura=None,
-          condicao: str = "", response_id: str | None = None) -> dict:
+          condicao: str = "", response_id: str | None = None, setor: str = "",
+          setor_perguntado: str = "") -> dict:
     return {
         "response_id": response_id or str(uuid.uuid4()),
         "kiosk_id": kiosk,
@@ -36,6 +37,8 @@ def linha(momento: str, emocao: str, data: date, kiosk: str = "Q01", hora: str =
         "motivo": motivo,
         "pergunta_do_dia": pergunta,
         "resposta_pergunta_do_dia": resposta,
+        "setor": setor,
+        "setor_perguntado": setor_perguntado,
         "temperatura_c": temperatura if temperatura is not None else "",
         "sensacao_termica_c": "",
         "precipitacao_mm": "",

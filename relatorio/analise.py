@@ -742,6 +742,104 @@ def pergunta_do_dia(df, config, minimo) -> dict:
     }
 
 
+# ================================================================ humor por setor
+NOME_SEM_SETOR = "(nenhum setor informado)"
+TODOS_OS_PONTOS = "Todos os pontos"
+COLUNAS_SETOR = ["Ponto de coleta", "Setor", "Respostas", "Índice de humor", "% positivas",
+                 "% negativas", "Taxa de informação"]
+
+
+def _texto_coluna(df: pd.DataFrame, coluna: str) -> pd.Series:
+    """Texto limpo de uma coluna. Coluna ausente (CSV antigo, sem setor) vira vazio."""
+    if coluna not in df.columns:
+        return pd.Series("", index=df.index, dtype=object)
+    texto = df[coluna].fillna("").astype(str).str.strip()
+    return texto.mask(texto.isin(["nan", "None"]), "")
+
+
+def _linha_setor(ponto: str, setor: str, g: pd.DataFrame, taxa, minimo: int) -> dict:
+    n = len(g)
+    media = float(g["pontuacao"].mean()) if n else math.nan
+    return {
+        "Ponto de coleta": ponto,
+        "Setor": setor,
+        "Respostas": exibir_contagem(n, minimo),
+        "Índice de humor": exibir_estatistica(media, n, minimo),
+        "% positivas": exibir_fracao((g["valencia"] == "positiva").sum(), n, minimo),
+        "% negativas": exibir_fracao((g["valencia"] == "negativa").sum(), n, minimo),
+        "Taxa de informação": taxa,
+    }
+
+
+def humor_por_setor(df: pd.DataFrame, rotulos: dict, minimo: int = 5) -> dict:
+    """Humor por ponto de coleta × setor, com a taxa de informação do setor.
+
+    - Só entram médias e percentuais de quem informou o setor (setor vazio:
+      pulou a tela ou não a viu, e fica de fora).
+    - Um ponto de coleta entra quando tem a tela de setor (setor_perguntado
+      = 'sim') ou algum setor informado. Os demais não têm setores.
+    - Total por setor: só para nomes que existem em mais de um ponto de
+      coleta; esses pontos são unidos. Nome de um ponto só não repete linha.
+    - Taxa de informação = respostas com setor ÷ respostas com a tela
+      (setor_perguntado = 'sim'), por ponto de coleta.
+    """
+    base = pd.DataFrame({
+        "kiosk_id": df["kiosk_id"].values,
+        "setor": _texto_coluna(df, "setor").values,
+        "perguntado": (_texto_coluna(df, "setor_perguntado") == "sim").values,
+        "pontuacao": df["pontuacao"].values,
+        "valencia": df["valencia"].values,
+    })
+    base["informado"] = base["setor"] != ""
+    base["informou_na_tela"] = base["perguntado"] & base["informado"]
+
+    linhas, grupos = [], []
+    graf = {"rotulos": [], "valores": [], "n": []}
+    for kiosk in rotulos:
+        do_k = base[base["kiosk_id"] == kiosk]
+        if not (do_k["perguntado"] | do_k["informado"]).any():
+            continue  # ponto sem tela de setor
+        taxa = exibir_fracao(do_k["informou_na_tela"].sum(), do_k["perguntado"].sum(), minimo)
+        ponto = rotulos[kiosk]
+        com_setor = do_k[do_k["informado"]]
+        setores = sorted(com_setor["setor"].unique(), key=str.casefold)
+        if not setores:
+            linhas.append(_linha_setor(ponto, NOME_SEM_SETOR, do_k.iloc[0:0], taxa, minimo))
+            continue
+        for setor in setores:
+            g = com_setor[com_setor["setor"] == setor]
+            linhas.append(_linha_setor(ponto, setor, g, taxa, minimo))
+            n = len(g)
+            valido = n >= minimo
+            media = float(g["pontuacao"].mean())
+            grupos.append({"kiosk": kiosk, "setor": setor, "n": n, "media": media, "valido": valido})
+            graf["rotulos"].append(f"{setor} ({kiosk})")
+            graf["valores"].append(media if valido else None)
+            graf["n"].append(n)
+
+    por_setor = base.loc[base["informado"]].groupby("setor")["kiosk_id"].nunique()
+    compartilhados = sorted(por_setor[por_setor >= 2].index, key=str.casefold)
+    for setor in compartilhados:
+        g = base[base["informado"] & (base["setor"] == setor)]
+        linhas.append(_linha_setor(TODOS_OS_PONTOS, setor, g, "", minimo))
+
+    tem_setor = bool(base["informado"].any())
+    nota = ("Só entram os setores informados: quem pulou a tela não entra nas médias nem nos percentuais. "
+            "Taxa de informação = pessoas que informaram o setor ÷ pessoas a quem a tela de setor foi "
+            "mostrada (chegada e saída do dia).")
+    if tem_setor and not compartilhados:
+        nota += (" Nenhum nome de setor aparece em mais de um ponto de coleta, "
+                 "por isso não há total por setor.")
+    formatos = {"Respostas": "int", "Índice de humor": "sinal", "% positivas": "pct",
+                "% negativas": "pct", "Taxa de informação": "pct"}
+    return {
+        "tabela": Tabela("humor_setor", "Humor por setor", pd.DataFrame(linhas, columns=COLUNAS_SETOR),
+                         formatos, nota=nota),
+        "grafico": {**graf, "tem_setor": tem_setor, "tem_totais": bool(compartilhados)},
+        "brutos": grupos,
+    }
+
+
 # ===================================================================== geral
 def marcar_dias_uteis(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """Dia útil = segunda a sexta, exceto feriados nacionais e feriados_extras."""
@@ -811,6 +909,11 @@ def analisar(df: pd.DataFrame, config: dict) -> Resultado:
     pq = pergunta_do_dia(df, config, minimo)
     t["pergunta_dia"] = pq["tabela"]
     g["pergunta_dia"] = pq["grafico"]
+
+    hs = humor_por_setor(df, rotulos, minimo)
+    t["humor_setor"] = hs["tabela"]
+    g["humor_setor"] = hs["grafico"]
+    b["humor_setor"] = hs["brutos"]
 
     util = df[df["dia_util"]]
     resultado.kpis = {

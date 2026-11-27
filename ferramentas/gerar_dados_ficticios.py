@@ -4,6 +4,9 @@ Simula 2 quinzenas (4 semanas corridas), 3 pontos de coleta e cerca de
 150 pessoas, nos 4 momentos do dia, gravando os CSVs exatamente no
 formato dos quiosques (um arquivo por quiosque por dia).
 
+Os quiosques Q01 e Q02 têm tela de setor: na chegada e na saída do dia,
+~80% informam o setor (setor_perguntado = 'sim'). O Q03 não tem setores.
+
 Uso:
     python ferramentas/gerar_dados_ficticios.py [--saida dados_ficticios]
         [--fim AAAA-MM-DD] [--semente 42] [--com-planilha]
@@ -91,6 +94,17 @@ JANELAS = {
 EFEITO_DIA = {0: -0.35, 1: -0.10, 2: 0.0, 3: 0.10, 4: 0.40, 5: 0.20, 6: 0.20}
 EFEITO_MOMENTO = {"chegada": 0.0, "saida_almoco": 0.25, "volta_almoco": 0.05, "saida_final": -0.25}
 FERIADOS_FIXOS = {(1, 1), (4, 21), (5, 1), (9, 7), (10, 12), (11, 2), (11, 15), (11, 20), (12, 25)}
+# Telas de setor: a lista de cada quiosque (vazia = tela desligada, como no quiosque/config.py).
+SETORES = {
+    "Q01": ["Administrativo", "Assistência técnica", "Comercial"],
+    "Q02": ["Produção", "Qualidade", "Segurança"],
+}
+MOMENTOS_COM_SETOR = ("chegada", "saida_final")
+PULA_SETOR = 0.20  # ~80% informam o setor
+EFEITO_SETOR = {"Comercial": 0.15, "Administrativo": 0.05, "Assistência técnica": -0.05,
+                "Produção": -0.10, "Qualidade": 0.0, "Segurança": -0.20}
+SETORES_RAROS_FDS = ("Segurança", "Qualidade")
+SEMANAS_FDS_RAROS = (1, 3)  # índices das semanas em que esses setores quase não aparecem nos fins de semana
 
 
 def condicao_do_codigo(codigo: int) -> str:
@@ -107,6 +121,8 @@ def condicao_do_codigo(codigo: int) -> str:
 class Simulador:
     def __init__(self, semente: int):
         self.rng = random.Random(semente)
+        # RNG separado para os setores: não muda a sequência dos demais sorteios.
+        self.rng_setor = random.Random(semente + 1000)
 
     # ----------------------------------------------------------------- clima
     def clima_do_dia(self, d: date) -> dict:
@@ -212,6 +228,20 @@ class Simulador:
             return texto, "Mais ou menos"
         return texto, desfavoravel
 
+    # --------------------------------------------------------------- setor
+    def setor_da_resposta(self, kiosk, momento, d, semana, setor_pessoa) -> tuple[str, str]:
+        """Devolve (setor_perguntado, setor). A tela só aparece em chegada e saída do dia."""
+        if kiosk not in SETORES or momento not in MOMENTOS_COM_SETOR:
+            return "não", ""
+        if self.rng_setor.random() < PULA_SETOR:
+            return "sim", ""
+        if setor_pessoa is not None:  # em dia útil, cada pessoa tem o próprio setor
+            return "sim", setor_pessoa
+        setores = SETORES[kiosk]  # fim de semana: quem aparece é sorteado
+        pesos = [0.12 if eh_folga(d) and nome in SETORES_RAROS_FDS and semana in SEMANAS_FDS_RAROS
+                 else 1.0 for nome in setores]
+        return "sim", self.rng_setor.choices(setores, pesos)[0]
+
     # ------------------------------------------------------------- horários
     def horario(self, momento: str, d: date) -> tuple[int, bool]:
         """Devolve (minutos, momento_automatico)."""
@@ -229,7 +259,7 @@ class Simulador:
 
     # ------------------------------------------------------------- resposta
     def montar(self, kiosk, local, d, momento, minutos, automatico, emocao, clima, motivo="",
-               pergunta="", resposta="") -> dict:
+               pergunta="", resposta="", setor="", setor_perguntado="não") -> dict:
         segundos = self.rng.randint(0, 59)
         hora = f"{minutos // 60:02d}:{minutos % 60:02d}:{segundos:02d}"
         linha = {
@@ -248,6 +278,8 @@ class Simulador:
             "motivo": motivo,
             "pergunta_do_dia": pergunta,
             "resposta_pergunta_do_dia": resposta,
+            "setor": setor,
+            "setor_perguntado": setor_perguntado,
             "versao_app": VERSAO_APP,
         }
         for chave in ("temperatura_c", "sensacao_termica_c", "precipitacao_mm", "codigo_tempo",
@@ -270,6 +302,8 @@ def gerar(fim: date, semente: int = 42) -> list[dict]:
             {"base": rng.gauss(0.4, 0.5), "engajamento": rng.uniform(0.55, 1.15)}
             for _ in range(populacao)
         ]
+        for pessoa in pessoas[kiosk]:  # setor fixo de cada pessoa (sorteio à parte)
+            pessoa["setor"] = sim.rng_setor.choice(SETORES[kiosk]) if kiosk in SETORES else None
     linhas = []
     d = inicio
     while d <= fim:
@@ -291,7 +325,9 @@ def gerar(fim: date, semente: int = 42) -> list[dict]:
                     clima = clima_para(minutos)
                     latente = rng.gauss(0.5, 0.9)
                     emocao = sim.escolher_emocao(latente, momento, d.weekday())
-                    linhas.append(sim.montar(kiosk, local, d, momento, minutos, False, emocao, clima))
+                    perguntado, setor = sim.setor_da_resposta(kiosk, momento, d, semana, None)
+                    linhas.append(sim.montar(kiosk, local, d, momento, minutos, False, emocao, clima,
+                                             setor=setor, setor_perguntado=perguntado))
                 continue
 
             for pessoa in pessoas[kiosk]:
@@ -305,7 +341,8 @@ def gerar(fim: date, semente: int = 42) -> list[dict]:
                     minutos, automatico = sim.horario(momento, d)
                     clima = clima_para(minutos)
                     latente = (humor_pessoa_dia + EFEITO_DIA[d.weekday()] + EFEITO_MOMENTO[momento]
-                               + efeito_kiosk + ruido_dia + rng.gauss(0, 0.8))
+                               + efeito_kiosk + EFEITO_SETOR.get(pessoa["setor"], 0.0)
+                               + ruido_dia + rng.gauss(0, 0.8))
                     if momento == "saida_final" and d.weekday() == 4:
                         latente += 0.5
                     condicao = clima.get("condicao")
@@ -319,8 +356,10 @@ def gerar(fim: date, semente: int = 42) -> list[dict]:
                         motivo = sim.escolher_motivo(momento, valencia, emocao, d.weekday(), clima, kiosk)
                     if momento == "saida_final" and rng.random() < 0.78:
                         pergunta, resposta = sim.responder_pergunta(d, latente)
+                    perguntado, setor = sim.setor_da_resposta(kiosk, momento, d, semana, pessoa["setor"])
                     linhas.append(sim.montar(kiosk, local, d, momento, minutos, automatico, emocao,
-                                             clima, motivo, pergunta, resposta))
+                                             clima, motivo, pergunta, resposta,
+                                             setor=setor, setor_perguntado=perguntado))
         d += timedelta(days=1)
     linhas.sort(key=lambda l: (l["kiosk_id"], l["data"], l["hora"]))
     return linhas

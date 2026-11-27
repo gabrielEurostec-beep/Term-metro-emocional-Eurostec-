@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 from plotly.offline import get_plotlyjs
 
 from quiosque.formato import MOMENTOS
-from relatorio.analise import INSUFICIENTE, Resultado, Tabela
+from relatorio.analise import INSUFICIENTE, Resultado, Tabela, exibir_contagem
 from relatorio.formatacao import (
     data_br, decimal, eh_numero, inteiro, nome_momento, percentual,
 )
@@ -507,6 +507,34 @@ def grafico_pergunta_do_dia(r: Resultado) -> str:
     return _fig_html(fig) + nota
 
 
+def grafico_humor_por_setor(r: Resultado) -> str:
+    g = r.graficos["humor_setor"]
+    rotulos, extras = [], []
+    for rotulo, n in zip(g["rotulos"], g["n"]):
+        contagem = exibir_contagem(n, r.minimo)
+        if isinstance(contagem, int):
+            rotulos.append(f"{rotulo} · n={inteiro(contagem)}")
+            extras.append(f"Respostas: {inteiro(contagem)}")
+        else:  # 1 a 4 respostas: "<5", sem número
+            rotulos.append(f"{rotulo} · n {contagem}")
+            extras.append(f"Respostas: {contagem}")
+    fig = _barras_polaridade(rotulos, g["valores"], extras, "Índice de humor", horizontal=True,
+                             altura=max(260, 90 + 44 * len(rotulos)))
+    return _fig_html(fig)
+
+
+def bloco_humor_por_setor(r: Resultado) -> str:
+    if not r.graficos["humor_setor"]["tem_setor"]:
+        return cartao("Índice de humor por setor", "",
+                      '<p class="vazio">Nenhum setor informado neste período.</p>')
+    nota_anonimato = (f'<p class="nota">Recortes com menos de {r.minimo} respostas aparecem como '
+                      f'“dados insuficientes”; categorias com 1 a {r.minimo - 1} respostas aparecem como '
+                      f'“&lt;{r.minimo}”, sem número nem percentual.</p>')
+    corpo = grafico_humor_por_setor(r) + nota_anonimato + tabela_html(r.tabelas["humor_setor"])
+    return cartao("Índice de humor por setor",
+                  "Média das pontuações de quem informou o setor, por ponto de coleta.", corpo)
+
+
 # ===================================================================== página
 CSS = """
 :root {
@@ -812,6 +840,12 @@ def gerar_html(r: Resultado, resumo: list[str], caminho: Path, info_leitura: dic
 </section>""")
 
     secoes.append(f"""
+<section id="setores">
+  <h2>Humor por setor.</h2>
+  {bloco_humor_por_setor(r)}
+</section>""")
+
+    secoes.append(f"""
 <section id="motivos">
   <h2>Motivos.</h2>
   {graficos_motivos(r)}
@@ -852,7 +886,7 @@ def gerar_html(r: Resultado, resumo: list[str], caminho: Path, info_leitura: dic
         f'<li><a href="#{a}">{_esc(b)}</a></li>'
         for a, b in [("resumo", "Resumo"), ("participacao", "Participação"), ("emocoes", "Emoções"),
                      ("humor", "Índice de humor"), ("variacoes", "Variações do dia"), ("clima", "Clima"),
-                     ("motivos", "Motivos"), ("pergunta", "Pergunta do dia"), ("notas", "Como ler")]
+                     ("setores", "Humor por setor"), ("motivos", "Motivos"), ("pergunta", "Pergunta do dia"), ("notas", "Como ler")]
     )
     pagina = f"""<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
