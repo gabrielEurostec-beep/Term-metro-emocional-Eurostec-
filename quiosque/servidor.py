@@ -153,6 +153,9 @@ class Aplicacao:
                 }
                 if pergunta else None
             ),
+            "setor": (
+                {"opcoes": c["setores"], "momentos": c["setor_momentos"]} if c.get("setores") else None
+            ),
             "textos": c["textos"],
             "tempos": c["tempos"],
             "contagem_hoje": self.registros.contagem_dia(momento_atual.date().isoformat()),

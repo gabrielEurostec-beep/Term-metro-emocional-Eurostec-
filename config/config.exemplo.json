@@ -187,6 +187,11 @@
       }
     }
   },
+  "setores": [],
+  "setor_momentos": [
+    "chegada",
+    "saida_final"
+  ],
   "pergunta_do_dia": {
     "ativa": true,
     "momentos": [
@@ -232,6 +237,7 @@
     "trocar_momento": "trocar momento",
     "pular": "Pular",
     "titulo_pergunta_do_dia": "Pergunta do dia",
+    "titulo_setor": "Em qual **setor** você trabalha?",
     "agradecimento": "**Obrigado!** Hoje {x} pessoas já registraram como estão.",
     "agradecimento_um": "**Obrigado!** Hoje 1 pessoa já registrou como está.",
     "acolhimento": "Obrigado por compartilhar. Se quiser conversar, a CIPA e o RH estão à disposição.",

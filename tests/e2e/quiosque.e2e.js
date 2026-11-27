@@ -380,6 +380,51 @@ async function cenario(nome, fn) {
     await fechar();
   });
 
+  await cenario('Setor: chegada mostra a tela de setor depois do motivo; Pular e escolha gravam certo', async () => {
+    const { srv, page, fechar } = await abrir('2026-11-18T07:45:00', { setores: ['Administrativo', 'Assistência técnica', 'Comercial'] });
+    await tocarInicio(page);
+    await aguardarTela(page, 'tela-emocoes');
+    await tocar(page, '[data-emocao="Cansado"]');
+    await aguardarTela(page, 'tela-motivo');
+    await tocar(page, '#motivo-opcoes .opcao >> text=Sono/cansaço');
+    await aguardarTela(page, 'tela-setor');
+    assert.equal(await page.locator('#setor-opcoes .opcao').count(), 3);
+    await capturar(page, '14_setor');
+    await tocar(page, '#setor-opcoes .opcao >> text=Comercial');
+    await page.waitForFunction(() => window.__termometro.tela() === 'tela-obrigado');
+    let csv = lerCsv(srv.base);
+    assert.equal(csv[0].setor, 'Comercial');
+    assert.equal(csv[0].setor_perguntado, 'sim');
+    await fechar();
+  });
+
+  await cenario('Setor: pular grava a resposta sem setor', async () => {
+    const { srv, page, fechar } = await abrir('2026-11-18T17:10:00', { setores: ['Produção', 'Qualidade', 'Segurança'] });
+    await tocarInicio(page);
+    await aguardarTela(page, 'tela-emocoes');
+    await tocar(page, '[data-emocao="Feliz"]');
+    await aguardarTela(page, 'tela-motivo');
+    await tocar(page, '#motivo-pular');
+    await aguardarTela(page, 'tela-pergunta');
+    await tocar(page, '#pergunta-pular');
+    await aguardarTela(page, 'tela-setor');
+    await tocar(page, '#setor-pular');
+    await page.waitForFunction(() => window.__termometro.tela() === 'tela-obrigado');
+    const csv = lerCsv(srv.base);
+    assert.equal(csv[0].setor, '');
+    assert.equal(csv[0].setor_perguntado, 'sim');
+    await fechar();
+  });
+
+  await cenario('Setor: almoço não mostra a tela de setor', async () => {
+    const { page, fechar } = await abrir('2026-11-18T11:45:00', { setores: ['Produção'] });
+    await tocarInicio(page);
+    await aguardarTela(page, 'tela-emocoes');
+    await tocar(page, '[data-emocao="Feliz"]');
+    await page.waitForFunction(() => window.__termometro.tela() === 'tela-obrigado');
+    await fechar();
+  });
+
   await cenario('Android: admin usa a ponte nativa (copiar para Download e fechar o app)', async () => {
     const srv = await iniciarServidor('2026-11-18T10:30:00');
     const page = await contexto.newPage();

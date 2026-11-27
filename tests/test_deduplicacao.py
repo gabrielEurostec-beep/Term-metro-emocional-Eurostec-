@@ -97,7 +97,7 @@ class TestCodeGs(unittest.TestCase):
             capture_output=True, text=True, encoding="utf-8", timeout=60,
         )
         self.assertEqual(resultado.returncode, 0, resultado.stdout + resultado.stderr)
-        self.assertIn("10 de 10", resultado.stdout)
+        self.assertRegex(resultado.stdout, r"(\d+) de \1 testes passaram")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
-  var TELAS_COM_TEMPO = ['tela-momento', 'tela-emocoes', 'tela-motivo', 'tela-pergunta'];
+  var TELAS_COM_TEMPO = ['tela-momento', 'tela-emocoes', 'tela-motivo', 'tela-pergunta', 'tela-setor'];
   var TELAS_ADMIN = ['tela-pin', 'tela-admin'];
 
   var estado = null;          // dados de /api/estado
@@ -142,6 +142,8 @@
     $('momento-titulo').innerHTML = negritoSimples(texto('titulo_escolher_momento'));
     $('botao-trocar-momento').textContent = texto('trocar_momento');
     $('motivo-pular').textContent = texto('pular');
+    $('setor-titulo').innerHTML = negritoSimples(texto('titulo_setor'));
+    $('setor-pular').textContent = texto('pular');
     $('pergunta-pular').textContent = texto('pular');
     $('pergunta-selo').textContent = texto('titulo_pergunta_do_dia');
 
@@ -183,7 +185,7 @@
 
   function aplicarEstado(novo) {
     estado = novo;
-    var assinatura = JSON.stringify([novo.textos, novo.emocoes, novo.momentos, novo.motivos, novo.pergunta_do_dia, novo.tempos]);
+    var assinatura = JSON.stringify([novo.textos, novo.emocoes, novo.momentos, novo.motivos, novo.pergunta_do_dia, novo.tempos, novo.setor]);
     if (assinatura !== assinaturaEstado) { assinaturaEstado = assinatura; desenharTudo(); }
     atualizarRodape();
     $('sem-servidor').hidden = true;
@@ -276,6 +278,8 @@
     if (valencia !== 'neutra' && motivos && motivos.opcoes && motivos.opcoes.length) etapas.push('motivo');
     var p = estado.pergunta_do_dia;
     if (p && p.momentos.indexOf(fluxo.momento) >= 0 && (valencia !== 'neutra' || p.mostrar_para_neutro)) etapas.push('pergunta');
+    var setor = estado.setor;
+    if (setor && setor.opcoes && setor.opcoes.length && setor.momentos.indexOf(fluxo.momento) >= 0) etapas.push('setor');
     etapas.push('obrigado');
     return etapas;
   }
@@ -284,6 +288,7 @@
     var etapa = fluxo.etapas.shift();
     if (etapa === 'motivo') { desenharMotivo(); mostrar('tela-motivo'); }
     else if (etapa === 'pergunta') { desenharPergunta(); mostrar('tela-pergunta'); }
+    else if (etapa === 'setor') { desenharSetor(); mostrar('tela-setor'); }
     else mostrarObrigado();
   }
 
@@ -304,6 +309,20 @@
       var b = el('button', 'opcao' + (/prefiro não dizer/i.test(opcao) ? ' secundaria' : ''), opcao);
       b.type = 'button';
       b.addEventListener('click', function () { completar({ motivo: opcao }, b); });
+      caixa.appendChild(b);
+    });
+  }
+
+  /* Setor do trabalhador: a pessoa escolhe um setor (ou pula). A resposta só é gravada se escolher. */
+  function desenharSetor() {
+    var caixa = $('setor-opcoes');
+    caixa.innerHTML = '';
+    var n = estado.setor.opcoes.length;
+    caixa.style.setProperty('--colunas', n <= 3 ? n : (n <= 6 ? 3 : 4));
+    estado.setor.opcoes.forEach(function (nome) {
+      var b = el('button', 'opcao', nome);
+      b.type = 'button';
+      b.addEventListener('click', function () { completar({ setor: nome }, b); });
       caixa.appendChild(b);
     });
   }
@@ -546,6 +565,7 @@
       { titulo: 'Quiosque', campos: [
         { r: 'Código do quiosque (ex.: Q01)', c: 'kiosk_id' },
         { r: 'Local', c: 'kiosk_local' },
+        { r: 'Setores deste quiosque (separe por ponto e vírgula; vazio = sem tela de setor)', c: 'setores', lista: true },
         { r: 'PIN da administração', c: 'pin_admin', modo: 'numeric' },
         { r: 'Logo azul (telas claras)', c: 'logo' },
         { r: 'Logo branco (telas azuis)', c: 'logo_branco' },
@@ -584,7 +604,9 @@
         var input = document.createElement('input');
         input.type = campo.tipo || 'text';
         input.setAttribute('data-caminho', campo.c);
+        if (campo.lista) input.setAttribute('data-lista', '1');
         var valor = lerCaminho(adminConfig, campo.c);
+        if (campo.lista && Array.isArray(valor)) valor = valor.join('; ');
         if (campo.tipo === 'checkbox') input.checked = !!valor;
         else input.value = valor == null ? '' : valor;
         if (campo.tipo === 'number') input.step = 'any';
@@ -648,6 +670,7 @@
       var valor;
       if (input.type === 'checkbox') valor = input.checked;
       else if (input.type === 'number') valor = input.value === '' ? null : Number(input.value);
+      else if (input.hasAttribute('data-lista')) valor = input.value.split(';').map(function (x) { return x.trim(); }).filter(function (x) { return x; });
       else valor = input.value.trim();
       gravarCaminho(novo, input.getAttribute('data-caminho'), valor);
     });
@@ -743,6 +766,7 @@
     $('tela-inicio').addEventListener('click', iniciarFluxo);
     $('botao-trocar-momento').addEventListener('click', trocarMomento);
     $('motivo-pular').addEventListener('click', pular);
+    $('setor-pular').addEventListener('click', pular);
     $('pergunta-pular').addEventListener('click', pular);
     $('pin-cancelar').addEventListener('click', voltarInicio);
     $('admin-sair').addEventListener('click', voltarInicio);

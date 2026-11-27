@@ -54,7 +54,8 @@ COMPUTADOR DA CIPA
 3. **Emoção (1º toque):** Feliz, Animado, Neutro, Cansado, Preocupado, Triste, Bravo ou Furioso. **A resposta é gravada neste toque.**
 4. **Motivo (só na chegada e na saída):** opcional, com botão "Pular". Quem escolhe Neutro não vê esta tela.
 5. **Pergunta do dia (só na saída):** Sim / Mais ou menos / Não, com "Pular".
-6. **Agradecimento:** mostra só quantas pessoas já participaram hoje naquele ponto. Para Triste, Bravo e Furioso aparece também uma mensagem acolhedora.
+6. **Setor (só na chegada e na saída do dia):** a pessoa escolhe o setor do seu quiosque, ou toca em "Pular". Esta tela é sempre a última antes do agradecimento.
+7. **Agradecimento:** mostra só quantas pessoas já participaram hoje naquele ponto. Para Triste, Bravo e Furioso aparece também uma mensagem acolhedora.
 
 | Momento | Horário automático | Pergunta na tela | Pergunta o motivo? |
 |---|---|---|---|
@@ -133,6 +134,8 @@ Se preferir editar o arquivo à mão, use o Bloco de Notas, salve e reinicie o q
 | `momentos.<momento>.perguntar_motivo` | Liga/desliga o motivo naquele momento | chegada e saída ligados |
 | `emocoes` | Lista de emoções: nome, emoji, cor, cor do texto, pontuação, valência e se mostra a mensagem acolhedora | 8 emoções |
 | `motivos` | Listas de motivos (positivo/negativo) da chegada e da saída | listas da especificação |
+| `setores` | Setores deste quiosque, separados por ponto e vírgula no formulário (ex.: `Produção; Qualidade; Segurança`). Vazio = sem tela de setor | vazio |
+| `setor_momentos` | Momentos em que a tela de setor aparece (sempre, sem sorteio) | chegada e saída do dia |
 | `pergunta_do_dia.ativa` | Liga/desliga a pergunta do dia | ligada |
 | `pergunta_do_dia.perguntas` | Perguntas em rodízio (uma por dia, igual em todos os quiosques) | 5 perguntas |
 | `pergunta_do_dia.mostrar_para_neutro` | Quem escolhe Neutro também vê a pergunta do dia | sim |
@@ -249,6 +252,8 @@ Todas as respostas de todos os quiosques vão para **uma Planilha Google**. Cada
 
 Vá em **Implantar → Gerenciar implantações → lápis (editar) → Versão: Nova versão → Implantar**. Assim **a URL continua a mesma**. Se criar uma "Nova implantação", a URL muda e precisa ser trocada em todos os quiosques.
 
+**Atualização de versão (ex.: colunas de setor):** republique o `Code.gs` como nova versão, como acima. As colunas novas são **acrescentadas automaticamente** ao final da aba **Respostas**, sem apagar os dados já gravados.
+
 ### Como funciona o envio
 
 - Cada resposta entra numa **fila** gravada no disco (`estado\fila_envio.json`) e é enviada em poucos segundos. A emoção e o motivo da mesma pessoa normalmente seguem juntos.
@@ -293,6 +298,7 @@ Rode `instalar.bat` e escolha **2**. Isso instala o necessário, a menos que a p
 - **Participação:** respostas por quiosque, por dia e por momento, e taxa de participação por momento e por semana, para ver se a adesão está caindo. A base é o **público esperado de 40 pessoas por quiosque** em cada momento, com a referência aos **150 funcionários**.
 - **Emoções** por momento.
 - **Índice de humor:** média da pontuação, por momento, e o gráfico do humor ao longo do dia com uma linha por dia da semana.
+- **Humor por setor:** média de humor de cada setor de cada quiosque, com o número de respostas e a taxa de pessoas que informaram o setor. Setores com menos de 5 respostas aparecem como "dados insuficientes".
 - **Variações do dia:**
   - Manhã = saída p/ almoço − chegada;
   - Almoço = volta − saída p/ almoço;
@@ -335,6 +341,8 @@ Um arquivo CSV por dia em `dados\`, por exemplo `respostas_Q01_2026-11-20.csv`. 
 | `emocao`, `valencia`, `pontuacao` | `Cansado`, `negativa`, `-1` | |
 | `motivo` | `Sono/cansaço` | vazio se pulou ou não foi perguntado |
 | `pergunta_do_dia`, `resposta_pergunta_do_dia` | `Conseguiu fazer suas pausas hoje?`, `Sim` | |
+| `setor` | `Comercial` | vazio se a pessoa pulou ou se o quiosque não tem setores |
+| `setor_perguntado` | `sim` / `não` | "sim" quando a tela de setor foi mostrada; permite calcular quantas pessoas informaram o setor |
 | `temperatura_c`, `sensacao_termica_c`, `precipitacao_mm` | `16,4`, `15,2`, `0,4` | vazios sem internet |
 | `codigo_tempo`, `condicao`, `dia_ou_noite` | `61`, `chuva`, `dia` | condição: sol / nublado / chuva / outro |
 | `versao_app` | `1.0.0` | |

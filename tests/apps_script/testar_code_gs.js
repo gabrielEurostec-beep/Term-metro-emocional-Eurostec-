@@ -17,6 +17,7 @@ function criarAba(nome) {
   const aba = {
     nome, dados, congeladas: 0, formatos: {},
     getLastRow: () => dados.length,
+    getLastColumn: () => Math.max(0, ...dados.map((l) => l.length)),
     getMaxRows: () => 1000,
     setFrozenRows: (n) => { aba.congeladas = n; },
     autoResizeColumns: () => aba,
@@ -122,11 +123,11 @@ const testes = {
     const aba = amb.abas.Respostas;
     assert.equal(aba.dados.length, 3);
     assert.equal(aba.dados[0][0], 'response_id');
-    assert.equal(aba.dados[0].length, 22);
+    assert.equal(aba.dados[0].length, 24);
     assert.equal(aba.congeladas, 1);
     assert.equal(aba.formatos[1], '@');
     assert.equal(aba.dados[1][11], -1, 'pontuação como número');
-    assert.equal(aba.dados[1][15], 16.4, 'temperatura como número');
+    assert.equal(aba.dados[1][17], 16.4, 'temperatura como número');
     assert.ok(amb.travas() >= 1, 'usa trava contra gravações simultâneas');
   },
   'reenvio e atualização SUBSTITUEM a linha (sem duplicar)'() {
@@ -168,6 +169,23 @@ const testes = {
     const r = amb.postBruto('isto não é json');
     assert.equal(r.ok, false);
     assert.match(amb.get(), /funcionando/);
+  },
+  'planilha antiga (sem colunas de setor) ganha as colunas no fim e recebe os dados certos'() {
+    const amb = novoAmbiente('segredo');
+    const antigas = ['response_id', 'kiosk_id', 'kiosk_local', 'timestamp', 'data', 'dia_semana', 'hora',
+      'momento', 'momento_automatico', 'emocao', 'valencia', 'pontuacao', 'motivo', 'pergunta_do_dia',
+      'resposta_pergunta_do_dia', 'temperatura_c', 'sensacao_termica_c', 'precipitacao_mm', 'codigo_tempo',
+      'condicao', 'dia_ou_noite', 'versao_app'];
+    amb.abas.Respostas = criarAba('Respostas');
+    amb.abas.Respostas.dados.push(antigas.slice());
+    amb.post({ token: 'segredo', acao: 'gravar', linhas: [linha(ID1, { setor: 'Comercial', setor_perguntado: 'sim' })] });
+    const aba = amb.abas.Respostas;
+    const cabecalho = aba.dados[0];
+    assert.equal(cabecalho.length, 24, 'duas colunas novas acrescentadas');
+    assert.equal(cabecalho[22], 'setor');
+    assert.equal(cabecalho[23], 'setor_perguntado');
+    assert.equal(aba.dados[1][cabecalho.indexOf('setor')], 'Comercial');
+    assert.equal(aba.dados[1][cabecalho.indexOf('emocao')], 'Cansado');
   },
   'configurarPlanilha cria a aba'() {
     const amb = novoAmbiente('segredo');

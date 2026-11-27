@@ -178,6 +178,10 @@ PADRAO: dict = {
             },
         },
     },
+    # Setores deste quiosque (ex.: ["Produção", "Qualidade"]). Vazio = tela de setor desligada.
+    "setores": [],
+    # Momentos em que a tela de setor aparece (sempre, sem sorteio; a pessoa pode pular).
+    "setor_momentos": ["chegada", "saida_final"],
     "pergunta_do_dia": {
         "ativa": True,
         "momentos": ["saida_final"],
@@ -206,6 +210,7 @@ PADRAO: dict = {
         "trocar_momento": "trocar momento",
         "pular": "Pular",
         "titulo_pergunta_do_dia": "Pergunta do dia",
+        "titulo_setor": "Em qual **setor** você trabalha?",
         "agradecimento": "**Obrigado!** Hoje {x} pessoas já registraram como estão.",
         "agradecimento_um": "**Obrigado!** Hoje 1 pessoa já registrou como está.",
         "acolhimento": (
@@ -434,6 +439,23 @@ def validar_config(config: dict) -> list[str]:
             if not isinstance(opcoes, list) or not opcoes or any(not isinstance(o, str) or not o.strip() for o in opcoes):
                 erros.append(f"'motivos.{mid}.{tipo}.opcoes' deve ser uma lista de textos.")
 
+    # Setores do quiosque
+    setores = config.get("setores", [])
+    if not isinstance(setores, list) or len(setores) > 20:
+        erros.append("'setores' deve ser uma lista com até 20 setores (pode ficar vazia).")
+    else:
+        vistos = set()
+        for i, nome in enumerate(setores):
+            if not isinstance(nome, str) or not nome.strip() or len(nome.strip()) > 40:
+                erros.append(f"'setores[{i + 1}]' precisa ser um texto de 1 a 40 caracteres.")
+            elif nome.strip().casefold() in vistos:
+                erros.append(f"O setor '{nome.strip()}' aparece duas vezes.")
+            else:
+                vistos.add(nome.strip().casefold())
+    setor_momentos = config.get("setor_momentos", [])
+    if not isinstance(setor_momentos, list) or any(m not in MOMENTOS for m in setor_momentos):
+        erros.append("'setor_momentos' deve listar momentos válidos (ex.: [\"chegada\", \"saida_final\"]).")
+
     # Pergunta do dia
     pdd = config.get("pergunta_do_dia", {})
     booleano(pdd.get("ativa"), "pergunta_do_dia.ativa")
@@ -481,6 +503,11 @@ def validar_config(config: dict) -> list[str]:
     numero(sinc.get("timeout_s"), "sincronizacao.timeout_s", 1, 300)
 
     return erros
+
+
+def setor_perguntado_para(config: dict, momento: str) -> bool:
+    """A tela de setor aparece neste momento? (quiosque com setores e momento na lista)."""
+    return bool(config.get("setores")) and momento in config.get("setor_momentos", [])
 
 
 def emocao_por_nome(config: dict, nome: str) -> dict | None:

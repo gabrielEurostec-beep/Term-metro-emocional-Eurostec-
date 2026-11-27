@@ -25,7 +25,8 @@ const NOME_ABA = 'Respostas';
 const COLUNAS = [
   'response_id', 'kiosk_id', 'kiosk_local', 'timestamp', 'data', 'dia_semana', 'hora',
   'momento', 'momento_automatico', 'emocao', 'valencia', 'pontuacao', 'motivo',
-  'pergunta_do_dia', 'resposta_pergunta_do_dia', 'temperatura_c', 'sensacao_termica_c',
+  'pergunta_do_dia', 'resposta_pergunta_do_dia', 'setor', 'setor_perguntado',
+  'temperatura_c', 'sensacao_termica_c',
   'precipitacao_mm', 'codigo_tempo', 'condicao', 'dia_ou_noite', 'versao_app'
 ];
 // Colunas guardadas como texto puro (a planilha não converte em data/número).
@@ -78,6 +79,9 @@ function gravarLinhas(linhas) {
   trava.waitLock(30000); // vários quiosques ao mesmo tempo: um de cada vez
   try {
     var aba = obterAba();
+    // As colunas seguem o cabeçalho REAL da planilha (por nome), então uma planilha
+    // antiga, com colunas a menos, continua funcionando.
+    var cabecalho = aba.getRange(1, 1, 1, aba.getLastColumn()).getValues()[0].map(String);
     var ultima = aba.getLastRow();
     var linhaDoId = {};
     if (ultima > 1) {
@@ -91,9 +95,9 @@ function gravarLinhas(linhas) {
     validas.forEach(function (l) {
       var id = l.response_id.toLowerCase();
       l.response_id = id;
-      var valores = COLUNAS.map(function (c) { return valorCelula(l[c]); });
+      var valores = cabecalho.map(function (c) { return valorCelula(l[c]); });
       if (linhaDoId[id]) {
-        aba.getRange(linhaDoId[id], 1, 1, COLUNAS.length).setValues([valores]);
+        aba.getRange(linhaDoId[id], 1, 1, cabecalho.length).setValues([valores]);
         atualizadas++;
       } else if (posicaoNova[id] !== undefined) {
         novas[posicaoNova[id]] = valores; // mesmo id duas vezes no mesmo envio: fica a última
@@ -103,7 +107,7 @@ function gravarLinhas(linhas) {
       }
     });
     if (novas.length) {
-      aba.getRange(ultima + 1, 1, novas.length, COLUNAS.length).setValues(novas);
+      aba.getRange(ultima + 1, 1, novas.length, cabecalho.length).setValues(novas);
     }
     return {
       ok: true,
@@ -137,6 +141,14 @@ function obterAba() {
     COLUNAS_TEXTO.forEach(function (c) {
       aba.getRange(1, COLUNAS.indexOf(c) + 1, aba.getMaxRows(), 1).setNumberFormat('@');
     });
+  } else {
+    // Planilha criada antes de uma versão: acrescenta no FIM as colunas que faltam.
+    var atual = aba.getRange(1, 1, 1, aba.getLastColumn()).getValues()[0].map(String);
+    var faltando = COLUNAS.filter(function (c) { return atual.indexOf(c) < 0; });
+    if (faltando.length) {
+      aba.getRange(1, atual.length + 1, 1, faltando.length).setValues([faltando])
+        .setFontWeight('bold').setBackground('#0446a4').setFontColor('#ffffff');
+    }
   }
   return aba;
 }

@@ -33,6 +33,8 @@ COLUNAS = [
     "motivo",
     "pergunta_do_dia",
     "resposta_pergunta_do_dia",
+    "setor",
+    "setor_perguntado",
     "temperatura_c",
     "sensacao_termica_c",
     "precipitacao_mm",

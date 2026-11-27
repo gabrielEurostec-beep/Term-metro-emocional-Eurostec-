@@ -18,7 +18,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Callable
 
-from .config import emocao_por_nome, opcoes_motivo
+from .config import emocao_por_nome, opcoes_motivo, setor_perguntado_para
 from .formato import COLUNAS, MOMENTOS, VERSAO_APP, escrever_csv, ler_csv, nome_arquivo_dia
 from .momentos import dia_semana, pergunta_do_dia
 
@@ -216,6 +216,7 @@ class Registros:
                 "valencia": emocao["valencia"],
                 "pontuacao": emocao["pontuacao"],
                 "versao_app": VERSAO_APP,
+                "setor_perguntado": "sim" if setor_perguntado_para(config, momento) else "não",
             })
             if self.clima is not None:
                 linha.update(self.clima.dados_para_registro())
@@ -234,7 +235,7 @@ class Registros:
             raise ErroValidacao("response_id inválido.")
         if not isinstance(dados, dict) or not dados:
             raise ErroValidacao("Nada para atualizar.")
-        extras = set(dados) - {"motivo", "resposta_pergunta_do_dia"}
+        extras = set(dados) - {"motivo", "resposta_pergunta_do_dia", "setor"}
         if extras:
             raise ErroValidacao(f"Campo não permitido: {', '.join(sorted(extras))}.")
         config = self.obter_config()
@@ -259,6 +260,12 @@ class Registros:
                     raise ErroValidacao("Resposta inválida para a pergunta do dia.")
                 novos["pergunta_do_dia"] = pergunta["texto"]
                 novos["resposta_pergunta_do_dia"] = dados["resposta_pergunta_do_dia"]
+            if "setor" in dados:
+                if linha.get("setor_perguntado") != "sim":
+                    raise ErroValidacao("Esta resposta não tem a pergunta de setor.")
+                if dados["setor"] not in (config.get("setores") or []):
+                    raise ErroValidacao("Setor inválido para este quiosque.")
+                novos["setor"] = dados["setor"]
             linha.update(novos)
             self._gravar_dia(data_iso)
             copia = dict(linha)
