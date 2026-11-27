@@ -378,7 +378,7 @@ Com os executáveis na pasta `bin`, **os quiosques não precisam de Python**:
 
 ## 13. Testes e dados fictícios
 
-- **`gerar_dados_ficticios.bat`:** cria 2 quinzenas de respostas fictícias em `dados_ficticios\`, com 3 quiosques, cerca de 150 pessoas, participação variada e alguns dias sem clima. Ao final, pode gerar o relatório de teste.
+- **`gerar_dados_ficticios.bat`:** cria 2 quinzenas de respostas fictícias em `dados_ficticios\`, com 2 quiosques (Q01 e Q02), cerca de 150 pessoas, participação variada e alguns dias sem clima. Ao final, pode gerar o relatório de teste.
 - **`rodar_testes.bat`:** roda os testes automáticos, que cobrem:
   - gravação imediata no toque 1 e atualização pelo toque 2;
   - detecção do momento, inclusive fora das janelas, no fim de semana e nos feriados;

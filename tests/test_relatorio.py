@@ -1,6 +1,6 @@
 """Teste de ponta a ponta do relatório com os dados fictícios.
 
-Gera 2 quinzenas de dados fictícios (3 quiosques, ~150 pessoas), roda o
+Gera 2 quinzenas de dados fictícios (2 quiosques, ~150 pessoas), roda o
 relatório como o gerar_relatorio.bat faria e confere HTML e Excel.
 """
 from __future__ import annotations
@@ -46,7 +46,7 @@ class TestDadosFicticios(unittest.TestCase):
 
         self.assertGreater(len(self.linhas), 2500)
         self.assertEqual(set(self.linhas[0].keys()), set(COLUNAS))
-        self.assertEqual({l["kiosk_id"] for l in self.linhas}, {"Q01", "Q02", "Q03"})
+        self.assertEqual({l["kiosk_id"] for l in self.linhas}, {"Q01", "Q02"})
         self.assertEqual(sum(q[2] for q in self.g.QUIOSQUES), 150)  # ~150 pessoas
         datas = sorted({l["data"] for l in self.linhas})
         self.assertLessEqual(datas[0], "2026-10-26")

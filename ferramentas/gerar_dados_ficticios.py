@@ -1,11 +1,11 @@
 """Gera dados FICTÍCIOS para testar o relatório do Termômetro Emocional.
 
-Simula 2 quinzenas (4 semanas corridas), 3 pontos de coleta e cerca de
-150 pessoas, nos 4 momentos do dia, gravando os CSVs exatamente no
+Simula 2 quinzenas (4 semanas corridas), 2 pontos de coleta (Q01 e Q02) e
+cerca de 150 pessoas, nos 4 momentos do dia, gravando os CSVs exatamente no
 formato dos quiosques (um arquivo por quiosque por dia).
 
 Os quiosques Q01 e Q02 têm tela de setor: na chegada e na saída do dia,
-~80% informam o setor (setor_perguntado = 'sim'). O Q03 não tem setores.
+~80% informam o setor (setor_perguntado = 'sim').
 
 Uso:
     python ferramentas/gerar_dados_ficticios.py [--saida dados_ficticios]
@@ -72,9 +72,8 @@ PERGUNTAS = [
     ("Sentiu-se sobrecarregado(a) hoje?", True, 0.60),  # 0.60 = chance de "Não" (favorável)
 ]
 QUIOSQUES = [
-    ("Q01", "Portaria", 55, 0.00),
-    ("Q02", "Produção", 50, -0.20),
-    ("Q03", "Refeitório/Administrativo", 45, 0.15),
+    ("Q01", "Portaria", 80, 0.00),
+    ("Q02", "Produção", 70, -0.20),
 ]
 MOMENTOS = ["chegada", "saida_almoco", "volta_almoco", "saida_final"]
 PARTICIPACAO_BASE = {"chegada": 0.80, "saida_almoco": 0.42, "volta_almoco": 0.36, "saida_final": 0.70}
@@ -206,7 +205,7 @@ class Simulador:
                           "Relação com colegas": 1 + (1 if emocao in ("Bravo", "Furioso") else 0),
                           "Liderança/cobrança": 1.3 + (1.2 if emocao in ("Bravo", "Furioso") else 0),
                           "Falta de material/equipamento": 1 + (0.8 if kiosk == "Q02" else 0),
-                          "Cliente/pressão externa": 1.2 + (0.8 if kiosk == "Q03" else 0),
+                          "Cliente/pressão externa": 1.2,
                           "Cansaço físico": 2 + (2.5 if emocao == "Cansado" else 0) + (1 if kiosk == "Q02" else 0),
                           "Situação de risco/segurança": 0.4 + (0.6 if kiosk == "Q02" else 0),
                           "Prefiro não dizer": 1})

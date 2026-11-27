@@ -274,7 +274,7 @@ class TestSaidasHtmlEXlsx(unittest.TestCase):
         cls.r = analisar(df, config())
         cls.html = gerar_html(cls.r, gerar_resumo(cls.r), base / "r.html", info, RAIZ).read_text(encoding="utf-8")
         cls.xlsx = gerar_excel(cls.r, gerar_resumo(cls.r), base / "r.xlsx", info)
-        # Fim de semana: Segurança aparece só 2 vezes, então o grupo fica em "dados insuficientes".
+        # Fim de semana: poucos setores têm 5 ou mais respostas, então vários grupos ficam em "dados insuficientes".
         fds = filtrar_periodo(df, date(2026, 10, 31), date(2026, 11, 1))
         cls.r_fds = analisar(fds, config())
         cls.html_fds = gerar_html(cls.r_fds, gerar_resumo(cls.r_fds), base / "fds.html", info, RAIZ).read_text(
@@ -306,10 +306,10 @@ class TestSaidasHtmlEXlsx(unittest.TestCase):
         self.assertIn("dados insuficientes", secao)
         self.assertIn("&lt;5", secao)
         tab = self.r_fds.tabelas["humor_setor"].dados
-        seguranca = tab[tab["Setor"] == "Segurança"]  # os dados fictícios trazem o nome do local no ponto
-        self.assertEqual(len(seguranca), 1)
-        self.assertEqual(seguranca["Respostas"].iat[0], "<5")
-        self.assertEqual(seguranca["Índice de humor"].iat[0], INSUFICIENTE)
+        pequenos = tab[tab["Respostas"] == "<5"]  # grupo com 1 a 4 respostas
+        self.assertGreaterEqual(len(pequenos), 1, "o fim de semana precisa ter pelo menos um grupo pequeno")
+        self.assertTrue((pequenos["Índice de humor"] == INSUFICIENTE).all(), "grupo pequeno não mostra média")
+        self.assertTrue((pequenos["% positivas"] == INSUFICIENTE).all(), "grupo pequeno não mostra percentual")
 
     def test_xlsx_tem_aba_setores_com_a_regra(self):
         from openpyxl import load_workbook

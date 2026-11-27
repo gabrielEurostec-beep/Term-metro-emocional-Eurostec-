@@ -5,7 +5,7 @@ cd /d "%~dp0"
 title Termômetro Emocional - Dados fictícios
 
 echo.
-echo  Gera 2 quinzenas de respostas FICTÍCIAS (3 quiosques, ~150 pessoas)
+echo  Gera 2 quinzenas de respostas FICTÍCIAS (2 quiosques, ~150 pessoas)
 echo  na pasta "dados_ficticios", para testar o relatório.
 echo.
 call "ferramentas\encontrar_python.bat"
