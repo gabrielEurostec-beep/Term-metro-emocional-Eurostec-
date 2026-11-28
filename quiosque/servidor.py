@@ -60,7 +60,7 @@ ROTAS_MARCA = {
     "/marca/fundo-azul": "fundo_azul",
 }
 TAMANHO_MAXIMO_PEDIDO = 256 * 1024
-VALIDADE_SESSAO_ADMIN_S = 30 * 60
+VALIDADE_SESSAO_ADMIN_S = int(os.environ.get("TERMOMETRO_SESSAO_ADMIN_S", str(30 * 60)))  # testes podem encurtar
 
 
 class Aplicacao:

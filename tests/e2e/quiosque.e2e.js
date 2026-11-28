@@ -35,7 +35,7 @@ function saude(p) {
   });
 }
 
-async function iniciarServidor(dataHora, configExtra) {
+async function iniciarServidor(dataHora, configExtra, ambienteExtra = {}) {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'termometro-e2e-'));
   fs.mkdirSync(path.join(base, 'assets'));
   for (const nome of fs.readdirSync(path.join(RAIZ, 'assets'))) {
@@ -48,7 +48,7 @@ async function iniciarServidor(dataHora, configExtra) {
   const p = ++porta;
   const proc = spawn(PYTHON, ['-m', 'quiosque', '--porta', String(p)], {
     cwd: RAIZ,
-    env: { ...process.env, TERMOMETRO_BASE: base, TERMOMETRO_DATA_HORA_TESTE: dataHora },
+    env: { ...process.env, TERMOMETRO_BASE: base, TERMOMETRO_DATA_HORA_TESTE: dataHora, ...ambienteExtra },
     stdio: 'ignore'
   });
   for (let i = 0; i < 50 && !(await saude(p)); i++) await espera(100);
@@ -423,6 +423,34 @@ async function cenario(nome, fn) {
     await tocar(page, '[data-emocao="Feliz"]');
     await page.waitForFunction(() => window.__termometro.tela() === 'tela-obrigado');
     await fechar();
+  });
+
+  await cenario('Administração: sessão expirada não apaga o PIN que a pessoa está digitando', async () => {
+    const srv = await iniciarServidor('2026-11-18T10:30:00', null, { TERMOMETRO_SESSAO_ADMIN_S: '4' });
+    const page = await contexto.newPage();
+    await page.goto(srv.url);
+    await aguardarTela(page, 'tela-inicio');
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: largura - 40, y: 40 }] });
+    await espera(3200);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await page.waitForFunction(() => window.__termometro.tela() === 'tela-pin');
+    for (const d of ['2', '4', '6', '8', 'OK']) await page.locator('#pin-teclado button', { hasText: new RegExp('^' + d + '$') }).tap();
+    await page.waitForFunction(() => window.__termometro.tela() === 'tela-admin');
+    // Tablet parado: a sessão de 4 s expira e a próxima consulta automática pede o PIN.
+    await page.route('**/api/admin/**', (r) => r.abort());
+    await espera(6000);
+    await page.unroute('**/api/admin/**');
+    await page.waitForFunction(() => window.__termometro.tela() === 'tela-pin', null, { timeout: 12000 });
+    // A pessoa demora para digitar: a consulta automática não pode apagar os dígitos.
+    await page.locator('#pin-teclado button', { hasText: /^2$/ }).tap();
+    await page.locator('#pin-teclado button', { hasText: /^4$/ }).tap();
+    await espera(6000);
+    assert.equal(await page.locator('#pin-pontos span').count(), 2, 'os dígitos digitados continuam na tela');
+    for (const d of ['6', '8', 'OK']) await page.locator('#pin-teclado button', { hasText: new RegExp('^' + d + '$') }).tap();
+    await page.waitForFunction(() => window.__termometro.tela() === 'tela-admin', null, { timeout: 4000 });
+    await page.close();
+    srv.parar();
   });
 
   await cenario('Android: admin usa a ponte nativa (copiar para Download e fechar o app)', async () => {

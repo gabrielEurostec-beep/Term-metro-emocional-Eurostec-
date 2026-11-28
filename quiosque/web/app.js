@@ -506,8 +506,17 @@
     }).catch(tratarErroAdmin);
   }
 
+  /* Sessão expirou: para a consulta automática (senão ela reabre o PIN a cada 5 s e apaga o que a
+     pessoa digitou) e pede o PIN uma única vez. */
   function tratarErroAdmin(erro) {
-    if (erro && erro.status === 401) { aviso('Sessão expirada. Digite o PIN novamente.'); abrirPin(); }
+    if (erro && erro.status === 401) {
+      clearInterval(timerStatusAdmin);
+      adminToken = null;
+      if (telaAtual !== 'tela-pin') {
+        aviso('Sessão expirada. Digite o PIN novamente.');
+        abrirPin();
+      }
+    }
   }
 
   function mensagem(id, t, ok) {
