@@ -72,8 +72,8 @@ PERGUNTAS = [
     ("Sentiu-se sobrecarregado(a) hoje?", True, 0.60),  # 0.60 = chance de "Não" (favorável)
 ]
 QUIOSQUES = [
-    ("Q01", "Portaria", 80, 0.00),
-    ("Q02", "Produção", 70, -0.20),
+    ("Q01", "Pavilhão 1", 80, 0.00),
+    ("Q02", "Pavilhão 6", 70, -0.20),
 ]
 MOMENTOS = ["chegada", "saida_almoco", "volta_almoco", "saida_final"]
 PARTICIPACAO_BASE = {"chegada": 0.80, "saida_almoco": 0.42, "volta_almoco": 0.36, "saida_final": 0.70}

@@ -92,7 +92,7 @@ O início faz parte da janela e o fim não. Por exemplo, 12:20 já conta como "V
 1. **Copie a pasta** `TermometroEmocional` para o computador do quiosque, por exemplo em `C:\TermometroEmocional`. Evite a Área de Trabalho e pastas sincronizadas com OneDrive.
 2. Dê **dois cliques em `instalar.bat`** e escolha **1 (Quiosque)**. Ele vai perguntar:
    - **Código do quiosque**: `Q01` e `Q02`, um código diferente em cada tablet.
-   - **Local**, por exemplo `Portaria`, `Produção` ou `Refeitório`.
+   - **Local**: `Pavilhão 1` no quiosque Q01 e `Pavilhão 6` no quiosque Q02.
    - **PIN da administração**, de 4 a 8 números.
    - Se quer que o quiosque **abra sozinho quando o Windows ligar**. Recomendado: **S**.
 3. Ainda no instalador, aceite **ajustar a energia** para a tela nunca desligar.
@@ -333,7 +333,7 @@ Um arquivo CSV por dia em `dados\`, por exemplo `respostas_Q01_2026-11-20.csv`. 
 | Coluna | Exemplo | Observação |
 |---|---|---|
 | `response_id` | `0b6f5c1e-…` | código único da resposta |
-| `kiosk_id`, `kiosk_local` | `Q01`, `Portaria` | |
+| `kiosk_id`, `kiosk_local` | `Q01`, `Pavilhão 1` | |
 | `timestamp` | `2026-11-20T07:45:12-03:00` | fuso de Brasília |
 | `data`, `dia_semana`, `hora` | `2026-11-20`, `sexta`, `07:45:12` | |
 | `momento` | `chegada` / `saida_almoco` / `volta_almoco` / `saida_final` | |
@@ -465,7 +465,7 @@ O Termômetro também funciona em **tablets Android 10 ou mais novos**. É o mes
 
 1. Abra o Termômetro e toque no **canto superior direito** da tela inicial por **3 segundos**.
 2. Digite o **PIN** (o padrão é **2468**; troque em *Configuração*, pois o PIN padrão é conhecido).
-3. Em **Configuração**, preencha o **código do quiosque** (ex.: Q01) e o **local** (ex.: Portaria).
+3. Em **Configuração**, preencha o **código do quiosque** (ex.: Q01) e o **local** (Pavilhão 1 no Q01 e Pavilhão 6 no Q02).
 4. Em **Planilha Google**, cole a URL e o token e toque em **Testar conexão** (veja a seção 7).
 5. Toque em **Salvar configuração**.
 
